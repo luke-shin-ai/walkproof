@@ -125,6 +125,15 @@ export function isQuotaError(message: string): boolean {
   return /quota|RESOURCE_EXHAUSTED|429|rate limit|too many requests|exhausted/i.test(message);
 }
 
+/**
+ * A spent day is different from a short per minute limit: the first one will not
+ * clear during this walk, so the rest of the queue is left for tomorrow instead
+ * of spending more calls on it.
+ */
+export function isDailyQuota(message: string): boolean {
+  return /per day|per-day|daily|requests per day/i.test(message);
+}
+
 /** A finding the rule pack can judge, from the device model, else from the built-in parser. */
 function deviceFinding(item: InspectionItem, note: string, result?: DeviceStepResult): { finding: Finding | null; source: string; latencyMs: number } {
   if (result?.finding) return { finding: result.finding, source: "on_device", latencyMs: result.latencyMs };
@@ -229,6 +238,7 @@ export async function runHybridArm(deps: BenchDeps, scenarios = BENCH_SCENARIOS)
   const budget = inMemoryStore();
   const today = deps.now.toISOString().slice(0, 10);
   const state: CloudCallState = { streak: 0, skipped: 0, stop: false };
+  let calls = 0;
   const notes: string[] = [];
 
   for (const scenario of scenarios) {
@@ -257,17 +267,20 @@ export async function runHybridArm(deps: BenchDeps, scenarios = BENCH_SCENARIOS)
             };
           }
           cloudCalled = true;
-          if (state.streak > 0) await pause(deps.gapMs);
+          /* Spaced out, so a per minute limit is not hit by a burst. */
+          if (calls > 0) await pause(deps.gapMs);
+          calls += 1;
           const result = await deps.classify!(target, payload);
           cloudModel = result.model;
-          if (result.error && isQuotaError(result.error)) {
+          if (result.error && isDailyQuota(result.error)) {
+            state.stop = true;
+            notes.push(`the free daily cloud quota ran out: ${shortError(result.error)}`);
+          } else if (result.error && isQuotaError(result.error)) {
             state.streak += 1;
-            if (state.streak >= 2) {
+            if (state.streak >= 3) {
               state.stop = true;
-              notes.push(`cloud stopped after ${state.streak} quota errors: ${shortError(result.error)}`);
+              notes.push(`cloud stopped after ${state.streak} rate limit answers: ${shortError(result.error)}`);
             }
-          } else if (!result.error) {
-            state.streak = 0;
           } else {
             state.streak = 0;
           }
@@ -376,11 +389,14 @@ export async function runCloudOnlyArm(deps: BenchDeps, scenarios = BENCH_SCENARI
     void payload;
 
     if (result.error) {
-      if (isQuotaError(result.error)) {
+      if (isDailyQuota(result.error)) {
+        stopped = true;
+        notes.push(`the free daily cloud quota ran out: ${shortError(result.error)}`);
+      } else if (isQuotaError(result.error)) {
         streak += 1;
-        if (streak >= 2) {
+        if (streak >= 3) {
           stopped = true;
-          notes.push(`cloud stopped after ${streak} quota errors: ${shortError(result.error)}`);
+          notes.push(`cloud stopped after ${streak} rate limit answers: ${shortError(result.error)}`);
         }
       } else {
         streak = 0;

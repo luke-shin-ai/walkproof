@@ -99,7 +99,29 @@ describe("the hybrid arm", () => {
     );
     expect(calls).toBeLessThanOrEqual(4);
     expect(result.metrics.cloudSkipped).toBeGreaterThan(0);
-    expect(result.metrics.notes.join(" ")).toMatch(/quota/);
+    expect(result.metrics.notes.join(" ")).toMatch(/quota|rate limit/);
+  });
+
+  it("stops at the first daily quota answer and leaves the queue for tomorrow", async () => {
+    let calls = 0;
+    const result = await runHybridArm(
+      deps({
+        classify: async () => {
+          calls += 1;
+          return {
+            raw: "",
+            latencyMs: 5,
+            error:
+              "FirebaseError: 429 RESOURCE_EXHAUSTED. Quota exceeded for metric generate_content_free_tier_requests, limit 20, per day limit exceeded",
+            model: "gemini-3.5-flash-lite",
+            modelFallback: true,
+            source: "unknown",
+          };
+        },
+      }),
+    );
+    expect(calls).toBe(1);
+    expect(result.metrics.notes.join(" ")).toMatch(/free daily cloud quota/);
   });
 });
 
