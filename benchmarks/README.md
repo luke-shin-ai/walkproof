@@ -7,6 +7,7 @@ https://luke-shin-ai.github.io/walkproof/bench/ .
 |---|---|---|
 | `raw-d5-2026-11-23.txt` | Kaggle Notebooks free CPU session (4 cores, 32 GiB, Chrome 158 on Linux) | the lines the D5 session printed: arm metrics, the per item table, the gate refusals, the layout checks |
 | `results-kaggle-2026-11-23.json` | assembled from the file above by `scripts/assemble-d5.mjs` | the D5 run: forty observations on the device and through the hybrid, plus ten held-out notes on the device |
+| `results-kaggle-d4-2026-11-23.json` | the earlier session of the same day, kept as it was recorded | D4: the same forty observations before the answer was checked against the line, with a six item cloud only baseline |
 
 `scripts/assemble-d5.mjs` recomputes every count from the per item table and
 refuses to write the JSON when one disagrees with what the session printed. The
