@@ -37,6 +37,8 @@ MODEL = globals().get("MODEL", "gemini-3.5-flash-lite")
 CLOUD_ONLY = int(globals().get("CLOUD_ONLY", 10))
 GAP_MS = int(globals().get("GAP_MS", 2500))
 RUN_TIMEOUT = int(globals().get("RUN_TIMEOUT", 3600))
+# The ten notes that are not part of the forty, walked on the device after them.
+HOLDOUT = int(globals().get("HOLDOUT", 1))
 
 SITE = BASE.replace("bench/", "")
 
@@ -118,14 +120,14 @@ def layout_report(browser, url, tag, shot_path):
     return report
 
 
-def bench_url():
-    params = f"?arms=none&model={MODEL}&cloudOnly={CLOUD_ONLY}&gap={GAP_MS}"
+def bench_url(set_name="main"):
+    params = f"?arms=none&model={MODEL}&cloudOnly={CLOUD_ONLY}&gap={GAP_MS}&set={set_name}"
     return f"{BASE}{params}#config={CFG}"
 
 
-def run_arms(browser, device, hybrid, cloud, count):
+def run_arms(browser, device, hybrid, cloud, count, set_name="main"):
     """Sets the arm checkboxes, then a real click, which is what lets the page create the model."""
-    browser.get(bench_url())
+    browser.get(bench_url(set_name))
     time.sleep(5)
     browser.execute_script(
         """
@@ -177,9 +179,18 @@ def main():
 
         browser.set_window_size(1440, 900)
 
-        cloud = run_arms(browser, device=False, hybrid=False, cloud=True, count=CLOUD_ONLY)
-        print(f"cloud only arm: {cloud['arms'][0]['cloudCalls']} calls, {cloud['arms'][0]['cloudErrors']} errors", flush=True)
         local = run_arms(browser, device=True, hybrid=True, cloud=False, count=CLOUD_ONLY)
+        print("forty item arms done", flush=True)
+
+        heldout = None
+        if HOLDOUT:
+            heldout = run_arms(browser, device=True, hybrid=False, cloud=False, count=CLOUD_ONLY, set_name="heldout")
+            print(f"held out arm: {heldout['arms'][0]['agreed']} of {heldout['arms'][0]['items']}", flush=True)
+
+        cloud = None
+        if CLOUD_ONLY > 0:
+            cloud = run_arms(browser, device=False, hybrid=False, cloud=True, count=CLOUD_ONLY)
+            print(f"cloud only arm: {cloud['arms'][0]['cloudCalls']} calls, {cloud['arms'][0]['cloudErrors']} errors", flush=True)
 
         results = {
             "generatedAt": local.get("generatedAt"),
@@ -187,9 +198,50 @@ def main():
             "environment": local.get("environment"),
             "host": "Kaggle Notebooks free CPU session, Chrome on Linux under Xvfb",
             "layout": layout,
-            "arms": local.get("arms", []) + cloud.get("arms", []),
-            "items": {**local.get("items", {}), **cloud.get("items", {})},
+            "arms": local.get("arms", []) + (cloud.get("arms", []) if cloud else []),
+            "items": {**local.get("items", {}), **(cloud.get("items", {}) if cloud else {})},
         }
+        if heldout:
+            results["holdout"] = {"metrics": heldout["arms"][0], "items": heldout["items"]["device"]}
+
+        print("ITEMS_BEGIN", flush=True)
+        for arm_name, rows in results.get("items", {}).items():
+            for row in rows:
+                print(
+                    "ITEM "
+                    + json.dumps(
+                        {
+                            "arm": arm_name,
+                            "id": row.get("scenario"),
+                            "expected": row.get("expected"),
+                            "answer": row.get("answerVerdict"),
+                            "recorded": row.get("recorded"),
+                            "check": row.get("evidence"),
+                            "gate": row.get("gate"),
+                            "ms": row.get("latencyMs"),
+                        },
+                        ensure_ascii=False,
+                    ),
+                    flush=True,
+                )
+        for row in (results.get("holdout") or {}).get("items", []):
+            print(
+                "ITEM "
+                + json.dumps(
+                    {
+                        "arm": "holdout",
+                        "id": row.get("scenario"),
+                        "expected": row.get("expected"),
+                        "answer": row.get("answerVerdict"),
+                        "recorded": row.get("recorded"),
+                        "check": row.get("evidence"),
+                        "ms": row.get("latencyMs"),
+                    },
+                    ensure_ascii=False,
+                ),
+                flush=True,
+            )
+        print("ITEMS_END", flush=True)
 
         with open("/kaggle/working/walkproof-bench-result.json", "w") as handle:
             json.dump(results, handle, indent=1)
@@ -197,6 +249,8 @@ def main():
         print("METRICS_BEGIN", flush=True)
         for arm in results.get("arms", []):
             print(json.dumps(arm, ensure_ascii=False), flush=True)
+        if results.get("holdout"):
+            print(json.dumps({**results["holdout"]["metrics"], "arm": "holdout"}, ensure_ascii=False), flush=True)
         print("METRICS_END", flush=True)
 
         blob = base64.b64encode(gzip.compress(json.dumps(results, ensure_ascii=False).encode())).decode()

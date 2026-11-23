@@ -369,3 +369,102 @@ export const BENCH_SCENARIOS: BenchScenario[] = [
 export function scenarioById(id: string): BenchScenario | undefined {
   return BENCH_SCENARIOS.find((scenario) => scenario.id === id);
 }
+
+/**
+ * Ten more observations, one per checklist item, written on 2026-11-23 after the
+ * forty and kept apart from them.
+ *
+ * They exist because the cross check in `src/rules/evidence.ts` was written from
+ * the forty item failures, which makes 40 of 40 there a ceiling rather than a
+ * claim. These notes ask for the same judgements in different words: four of the
+ * six open cases use a phrase the rule layer does not know, so the set measures
+ * how far a word list travels and whether the on-device model flags a guess it
+ * was not told the word for. The expected verdicts were written before any model
+ * ran and are not changed afterwards.
+ */
+export const HELDOUT_SCENARIOS: BenchScenario[] = [
+  {
+    id: "H01",
+    itemId: "fe-01",
+    kind: "borderline",
+    expected: "review",
+    note: "Gauge sits behind the scratched plastic, I think it is still in the green.",
+    photo: "extinguisher.jpg",
+  },
+  {
+    id: "H02",
+    itemId: "ex-02",
+    kind: "trap",
+    expected: "review",
+    note: "Sign seems to flicker when the corridor lights come on, I could not get a proper look from the stair.",
+    photo: "exit-sign.jpg",
+  },
+  {
+    id: "H03",
+    itemId: "el-03",
+    kind: "fail",
+    expected: "fail",
+    note: "Cover is off the board and the busbars are within reach.",
+    photo: "panel.jpg",
+  },
+  {
+    id: "H04",
+    itemId: "st-04",
+    kind: "borderline",
+    expected: "review",
+    note: "Hard to judge from the landing, the line on the soffit may be a shadow.",
+    photo: "crack.jpg",
+  },
+  {
+    id: "H05",
+    itemId: "eg-05",
+    kind: "pass",
+    expected: "pass",
+    note: "Exit route is clear, nothing stored on the floor.",
+    photo: "blocked-exit.jpg",
+  },
+  {
+    id: "H06",
+    itemId: "sd-08",
+    kind: "borderline",
+    expected: "review",
+    note: "Detector sits high behind a beam, so I could not tell whether paint reached it.",
+    photo: "smoke-detector.jpg",
+  },
+  {
+    id: "H07",
+    itemId: "fh-07",
+    kind: "trap",
+    expected: "review",
+    note: "Reel is there, but I am not sure the valve would turn in a hurry.",
+    photo: "hose-reel.jpg",
+  },
+  {
+    id: "H08",
+    itemId: "fd-09",
+    kind: "fail",
+    expected: "fail",
+    note: "Pallets are stacked in the shutter track again.",
+    photo: "fire-door.jpg",
+  },
+  {
+    id: "H09",
+    itemId: "sp-10",
+    kind: "borderline",
+    expected: "review",
+    note: "Head is inside a cage and the bulb is hard to judge from below.",
+    photo: "sprinkler.jpg",
+  },
+  {
+    id: "H10",
+    itemId: "fe-11",
+    kind: "trap",
+    expected: "review",
+    note: "Spare extinguisher is in the yard store, unclear whether that counts as the marked place.",
+    photo: "extinguisher-cart.jpg",
+  },
+];
+
+export function heldoutById(id: string): BenchScenario | undefined {
+  return HELDOUT_SCENARIOS.find((scenario) => scenario.id === id);
+}

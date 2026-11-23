@@ -93,3 +93,34 @@ describe("cloud answer gate", () => {
     expect(result.reasons[0]).toContain("not an object");
   });
 });
+
+describe("the gate on a line the person left open", () => {
+  const note = "Painted over during the refit, no idea whether it still works.";
+
+  it("refuses an answer that turns the hedge into a failure", () => {
+    const result = verifyCloudAnswer(answer(), item, DEFAULT_PACK, "unknown", deviceFinding, now, note);
+    expect(result.accepted).toBe(false);
+    expect(result.reasons.join(" ")).toContain("not conclusive");
+    expect(result.reasons.join(" ")).toContain("no idea");
+  });
+
+  it("accepts an answer that keeps it open and adds a clause and a remedy", () => {
+    const result = verifyCloudAnswer(
+      answer({ defectType: "none", severity: "none", obscured: true, suggestedVerdict: "unknown" }),
+      item,
+      DEFAULT_PACK,
+      "unknown",
+      deviceFinding,
+      now,
+      note,
+    );
+    expect(result.accepted).toBe(true);
+    expect(result.verdictFromRules).toBe("unknown");
+    expect(result.answer?.remedy.length).toBeGreaterThan(10);
+  });
+
+  it("leaves a decisive line alone", () => {
+    const result = verifyCloudAnswer(answer(), item, DEFAULT_PACK, "unknown", deviceFinding, now, "Detector painted over during the refurbishment, the grille is sealed with paint.");
+    expect(result.accepted).toBe(true);
+  });
+});

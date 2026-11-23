@@ -1,4 +1,5 @@
 import { DEFECT_TYPE_VALUES, SEVERITY_VALUES, VERDICT_VALUES } from "../ai/schema";
+import { noteEvidence } from "./evidence";
 import { judge } from "./judge";
 import type { CloudAnswer, DefectType, Finding, InspectionItem, RulePack, Severity, Verdict } from "../types";
 
@@ -53,6 +54,9 @@ function checkShape(value: unknown, item: InspectionItem, pack: RulePack): strin
  * 4. The rule pack, run on the cloud's own finding, agrees with the verdict the
  *    cloud suggested. A model may supply evidence; it may not overrule the pack.
  * 5. A non-unknown on-device verdict is never replaced by a different one.
+ * 6. A line that says the observation was not conclusive cannot be settled by
+ *    a model that reads the same line. The cloud may still add a clause and a
+ *    remedy, but an answer that turns a hedge into a verdict is refused.
  *
  * A failed check is not an error state to hide: the record is marked
  * `rejected_unsupported` and goes to a person.
@@ -64,6 +68,7 @@ export function verifyCloudAnswer(
   deviceVerdict: Verdict,
   deviceFinding: Finding | null,
   now = new Date(),
+  note = "",
 ): Verification {
   const shape = checkShape(raw, item, pack);
   if (shape.length || !isRecord(raw)) {
@@ -96,6 +101,15 @@ export function verifyCloudAnswer(
   }
   if (deviceVerdict !== "unknown" && rejudged.verdict !== deviceVerdict) {
     reasons.push(`the answer would change a settled on-device verdict from ${deviceVerdict} to ${rejudged.verdict}`);
+  }
+
+  if (note.trim()) {
+    const evidence = noteEvidence(item, note);
+    if (evidence.marks.length && rejudged.verdict !== "unknown") {
+      reasons.push(
+        `the answer settles the item at ${rejudged.verdict} while the line says the observation was not conclusive (${evidence.marks.join(", ")})`,
+      );
+    }
   }
 
   if (reasons.length) {

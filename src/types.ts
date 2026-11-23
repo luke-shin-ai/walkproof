@@ -85,6 +85,16 @@ export interface CloudCheck {
 export interface Observation {
   id: string;
   itemId: string;
+  /**
+   * What the device did with the answer it structured, before the rule pack
+   * judged it: kept it, amended it from the line, or held the item open.
+   */
+  noteCheck?: {
+    action: "kept" | "amended" | "held";
+    hold: "none" | "inconclusive" | "misread";
+    answerVerdict: Verdict;
+    reasons: string[];
+  };
   label: string;
   zone: string;
   photoName: string;

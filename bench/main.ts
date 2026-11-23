@@ -15,7 +15,7 @@ import {
   type BenchPhoto,
   type CloudPhotoResult,
 } from "../src/bench/harness";
-import { BENCH_SCENARIOS } from "../src/bench/scenarios";
+import { BENCH_SCENARIOS, HELDOUT_SCENARIOS } from "../src/bench/scenarios";
 
 import extinguisher from "../fixtures/extinguisher.jpg";
 import exitSign from "../fixtures/exit-sign.jpg";
@@ -48,6 +48,8 @@ interface Options {
   model: string;
   cloudOnly: number;
   gapMs: number;
+  /** `heldout` walks the ten notes that are not part of the forty. */
+  set: "main" | "heldout";
 }
 
 function readOptions(): Options {
@@ -60,6 +62,7 @@ function readOptions(): Options {
     model: params.get("model") ?? CLOUD_MODEL,
     cloudOnly: Math.max(1, Math.min(40, Number(params.get("cloudOnly") ?? 10))),
     gapMs: Math.max(0, Number(params.get("gap") ?? 2000)),
+    set: params.get("set") === "heldout" ? "heldout" : "main",
   };
 }
 
@@ -211,6 +214,13 @@ function metricRow(label: string, value: string): string {
   return `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`;
 }
 
+function checkText(evidence: string | undefined): string {
+  if (evidence === "amended") return "amended";
+  if (evidence === "held_inconclusive") return "held: line unclear";
+  if (evidence === "held_misread") return "held: answer unsupported";
+  return "kept";
+}
+
 function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
   const rows = items
     .map(
@@ -219,7 +229,9 @@ function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
         <td>${entry.itemId}</td>
         <td>${entry.kind}</td>
         <td>${entry.expected}</td>
+        <td>${entry.answerVerdict ?? entry.recorded}</td>
         <td>${entry.recorded}</td>
+        <td>${checkText(entry.evidence)}</td>
         <td>${entry.deviceSource}</td>
         <td>${entry.gate}</td>
         <td class="num">${entry.latencyMs}</td>
@@ -241,6 +253,9 @@ function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
       ${metricRow("request bytes to cloud", String(metrics.cloudRequestBytes))}
       ${metricRow("settled without cloud", `${metrics.offlineShare}%`)}
       ${metricRow("agreement", `${metrics.agreement}%`)}
+      ${metricRow("agreement of the raw answer", `${metrics.answerAgreement}%`)}
+      ${metricRow("held by the line", String(metrics.heldByNote))}
+      ${metricRow("amended from the line", String(metrics.amendedByNote))}
       ${metricRow("refusals", `${metrics.refused} of ${metrics.cloudCalls}`)}
       ${metricRow("review items", `${metrics.refusedOnReview} refused / ${metrics.settledOnReview} settled`)}
       ${metricRow("capture rate", metrics.captureRate === null ? "n/a" : `${metrics.captureRate}%`)}
@@ -248,7 +263,7 @@ function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
     ${metrics.notes.length ? `<ul class="notes">${metrics.notes.map((note) => `<li>${note}</li>`).join("")}</ul>` : ""}
     <div class="scroll">
       <table>
-        <thead><tr><th>id</th><th>item</th><th>kind</th><th>expected</th><th>recorded</th><th>structuring</th><th>gate</th><th>ms</th><th>photo B</th></tr></thead>
+        <thead><tr><th>id</th><th>item</th><th>kind</th><th>expected</th><th>answer</th><th>recorded</th><th>note check</th><th>structuring</th><th>gate</th><th>ms</th><th>photo B</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
@@ -326,7 +341,8 @@ async function run(options: Options): Promise<void> {
     const items: Record<string, ArmResult["items"]> = {};
 
     if (options.device) {
-      const result = await runDeviceArm(deps);
+      const deviceSet = options.set === "heldout" ? HELDOUT_SCENARIOS : BENCH_SCENARIOS;
+      const result = await runDeviceArm(deps, deviceSet);
       arms.push(result.metrics);
       items.device = result.items;
       renderResults({ arms, items, environment: env, cloudModel: options.model });
@@ -371,6 +387,7 @@ runButton?.addEventListener("click", () => {
     model: document.querySelector<HTMLInputElement>("#opt-model")?.value || CLOUD_MODEL,
     cloudOnly: Number(document.querySelector<HTMLInputElement>("#opt-count")?.value ?? 10),
     gapMs: 2000,
+    set: readOptions().set,
   };
   void run(options);
 });
@@ -408,6 +425,7 @@ const bridge: BenchBridge = {
       model: options?.model ?? readOptions().model,
       cloudOnly: options?.cloudOnly ?? readOptions().cloudOnly,
       gapMs: options?.gapMs ?? readOptions().gapMs,
+      set: options?.set ?? readOptions().set,
     }),
 };
 (globalThis as { __BENCH__?: BenchBridge }).__BENCH__ = bridge;

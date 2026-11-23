@@ -1,7 +1,7 @@
 import { extractJsonObject } from "../ai/schema";
 import type { KeyValueStore } from "../budget";
 import { processItem, shortError, type CloudStepResult, type DeviceStepResult } from "../pipeline";
-import { judge } from "../rules/judge";
+import { judgeNote } from "../rules/evidence";
 import { DEFAULT_PACK } from "../rules/pack";
 import { redactForCloud, structureNote } from "../rules/structure";
 import { verifyCloudAnswer } from "../rules/verify";
@@ -48,6 +48,11 @@ export interface ItemResult {
   expected: BenchExpected;
   verdict: Verdict;
   recorded: BenchExpected;
+  /** The verdict the model answer alone would have produced, before the cross check. */
+  answerVerdict: Verdict;
+  /** What the device did with the answer: kept it, amended it, or held the item open. */
+  evidence: "kept" | "amended" | "held_inconclusive" | "held_misread";
+  evidenceReasons: string[];
   source: string;
   deviceSource: string;
   latencyMs: number;
@@ -79,6 +84,11 @@ export interface ArmMetrics {
   verdicts: { pass: number; fail: number; review: number };
   agreed: number;
   agreement: number;
+  /** Agreement when the model answer is taken as it came back, with no cross check. */
+  answerAgreed: number;
+  answerAgreement: number;
+  heldByNote: number;
+  amendedByNote: number;
   reviewExpected: number;
   settledOnReview: number;
   refused: number;
@@ -154,6 +164,7 @@ function metricsOf(arm: BenchArm, items: ItemResult[], notes: string[]): ArmMetr
 
   const cloudCalls = items.filter((entry) => entry.cloudCalled && !entry.cloudSkipped).length;
   const agreed = items.filter((entry) => entry.recorded === entry.expected).length;
+  const answerAgreed = items.filter((entry) => recordedOf(entry.answerVerdict) === entry.expected).length;
 
   return {
     arm,
@@ -172,6 +183,10 @@ function metricsOf(arm: BenchArm, items: ItemResult[], notes: string[]): ArmMetr
     verdicts,
     agreed,
     agreement: items.length ? Math.round((agreed / items.length) * 100) : 0,
+    answerAgreed,
+    answerAgreement: items.length ? Math.round((answerAgreed / items.length) * 100) : 0,
+    heldByNote: items.filter((entry) => entry.evidence.startsWith("held")).length,
+    amendedByNote: items.filter((entry) => entry.evidence === "amended").length,
     reviewExpected: reviewItems.length,
     settledOnReview,
     refused: items.filter((entry) => entry.gate === "refused").length,
@@ -194,15 +209,18 @@ export async function runDeviceArm(deps: BenchDeps, scenarios = BENCH_SCENARIOS)
     const started = performance.now();
     let deviceResult: DeviceStepResult | undefined;
     if (deps.structureOnDevice) deviceResult = await deps.structureOnDevice(item, scenario.note);
-    const { finding, source, latencyMs } = deviceFinding(item, scenario.note, deviceResult);
-    const judged = judge(item, finding, deps.now);
+    const { finding, source } = deviceFinding(item, scenario.note, deviceResult);
+    const decision = judgeNote(item, scenario.note, finding, deps.now);
     items.push({
       scenario: scenario.id,
       itemId: scenario.itemId,
       kind: scenario.kind,
       expected: scenario.expected,
-      verdict: judged.verdict,
-      recorded: recordedOf(judged.verdict),
+      verdict: decision.verdict,
+      recorded: recordedOf(decision.verdict),
+      answerVerdict: decision.answerVerdict,
+      evidence: decision.evidence.hold === "none" ? (decision.evidence.action === "amended" ? "amended" : "kept") : decision.evidence.hold === "inconclusive" ? "held_inconclusive" : "held_misread",
+      evidenceReasons: decision.reasons,
       source: "on_device",
       deviceSource: source,
       latencyMs: Math.round(performance.now() - started),
@@ -216,7 +234,6 @@ export async function runDeviceArm(deps: BenchDeps, scenarios = BENCH_SCENARIOS)
       gateReasons: [],
       answer: finding ? `${finding.targetPresent ? "present" : "absent"} / ${finding.defectType} / ${finding.severity}${finding.obscured ? " / obscured" : ""}` : null,
     });
-    void latencyMs;
   }
   return { metrics: metricsOf("device", items, []), items };
 }
@@ -308,6 +325,7 @@ export async function runHybridArm(deps: BenchDeps, scenarios = BENCH_SCENARIOS)
       },
     );
 
+    const check = observation.noteCheck ?? { action: "kept" as const, hold: "none" as const, answerVerdict: observation.verdict, reasons: [] };
     items.push({
       scenario: scenario.id,
       itemId: scenario.itemId,
@@ -315,6 +333,9 @@ export async function runHybridArm(deps: BenchDeps, scenarios = BENCH_SCENARIOS)
       expected: scenario.expected,
       verdict: observation.verdict,
       recorded: recordedOf(observation.verdict),
+      answerVerdict: check.answerVerdict,
+      evidence: check.hold === "none" ? (check.action === "amended" ? "amended" : "kept") : check.hold === "inconclusive" ? "held_inconclusive" : "held_misread",
+      evidenceReasons: check.reasons,
       source: observation.source,
       deviceSource: observation.deviceSource,
       latencyMs: observation.latencyMs,
@@ -360,6 +381,9 @@ export async function runCloudOnlyArm(deps: BenchDeps, scenarios = BENCH_SCENARI
         expected: scenario.expected,
         verdict: "unknown",
         recorded: "review",
+        answerVerdict: "unknown",
+        evidence: "kept",
+        evidenceReasons: [],
         source: "skipped",
         deviceSource: "none",
         latencyMs: Math.round(performance.now() - started),
@@ -404,7 +428,7 @@ export async function runCloudOnlyArm(deps: BenchDeps, scenarios = BENCH_SCENARI
     } else {
       streak = 0;
       const extracted = extractJsonObject(result.raw);
-      const verification = verifyCloudAnswer(extracted.value, item, deps.pack, "unknown", null, deps.now);
+      const verification = verifyCloudAnswer(extracted.value, item, deps.pack, "unknown", null, deps.now, scenario.note);
       gate = verification.accepted ? "accepted" : "refused";
       gateReasons = extracted.problem ? [extracted.problem, ...verification.reasons] : verification.reasons;
       const answer: CloudAnswer | null = verification.answer;
@@ -420,6 +444,9 @@ export async function runCloudOnlyArm(deps: BenchDeps, scenarios = BENCH_SCENARI
       expected: scenario.expected,
       verdict,
       recorded: recordedOf(verdict),
+      answerVerdict: verdict,
+      evidence: "kept",
+      evidenceReasons: [],
       source: gate === "refused" ? "rejected_unsupported" : gate === "accepted" ? "in_cloud" : "unknown",
       deviceSource: "none",
       latencyMs,

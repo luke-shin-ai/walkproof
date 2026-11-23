@@ -598,16 +598,21 @@ input[type="text"]::placeholder {
 }
 
 .count {
-  padding: 8px 6px;
+  padding: 8px 4px;
   border-radius: 9px;
   background: #f6f8f6;
   text-align: center;
+  min-width: 0;
 }
 
+/* The four labels share a 288 px card. "REJECTED" is the longest of them, so
+   the label is set a little tighter and is never allowed to break: a wrapped
+   label reads as two words and the count under it looks wrong. */
 .count dt {
-  font-size: 0.64rem;
+  font-size: 0.58rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
   color: var(--muted);
 }
 

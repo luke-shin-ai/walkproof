@@ -71,8 +71,9 @@ export function buildStructurePrompt(item: InspectionItem, note: string): string
     `What has to be seen: ${EXPECTS_TEXT[item.expects]}.`,
     `Inspector note: ${note.trim() || "none"}.`,
     "Use only what the note says. Do not invent damage the note does not mention.",
-    "If the note says the item or the view was not visible, set targetPresent to false.",
+    "Never report the item as absent unless the note says it is missing, gone, or not there.",
     "Set obscured to true when glare, a cover, or the angle hid the part that matters.",
+    "A note can be a guess. When it says the writer could not see or could not tell, was not sure, thought, guessed, or that something seemed or looked like something, set obscured to true and report only the defects the note states plainly.",
     "Use defectType none and severity none when the note reports nothing wrong.",
     "Answer with the JSON object only.",
   ].join(" ");

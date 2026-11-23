@@ -88,7 +88,7 @@ describe("item pipeline", () => {
     expect(observation.fixBy).toBe("2026-11-26");
   });
 
-  it("sends only an unknown item to the cloud and accepts a checked answer", async () => {
+  it("sends only an unknown item to the cloud and refuses an answer that settles a line the person left open", async () => {
     const sent: string[] = [];
     const observation = await processItem(input("sd-08", "Painted over during the refit, no idea whether it still works."), {
       ...deps(),
@@ -98,13 +98,43 @@ describe("item pipeline", () => {
       },
     });
     expect(observation.cloud).not.toBeNull();
-    expect(observation.cloud?.accepted).toBe(true);
-    expect(observation.source).toBe("in_cloud");
-    expect(observation.verdict).toBe("fail");
-    expect(observation.fixBy).toBe("2026-11-30");
+    expect(observation.cloud?.accepted).toBe(false);
+    expect(observation.source).toBe("rejected_unsupported");
+    expect(observation.verdict).toBe("unknown");
+    expect(observation.fixBy).toBeNull();
+    expect(observation.cloud?.reasons.join(" ")).toContain("not conclusive");
     expect(sent).toHaveLength(1);
     expect(sent[0]).not.toContain("data:image");
     expect(observation.cloud?.payloadBytes).toBeGreaterThan(50);
+  });
+
+  it("accepts a cloud answer that keeps an open line open and adds a remedy", async () => {
+    const observation = await processItem(input("sp-10", "Head looks painted, not sure whether that is allowed."), {
+      ...deps(),
+      classify: async () => ({
+        raw: JSON.stringify({
+          targetPresent: true,
+          targetName: "sprinkler head",
+          defectType: "none",
+          severity: "none",
+          obscured: true,
+          note: "the line does not settle whether paint reached the bulb",
+          clauseId: "SP-10",
+          remedy: "Have someone look at the head from a ladder and record it.",
+          suggestedVerdict: "unknown",
+        }),
+        latencyMs: 1200,
+        error: null,
+        model: "gemini-4-hydrogen",
+        modelFallback: false,
+        source: "in_cloud",
+      }),
+    });
+    expect(observation.cloud?.accepted).toBe(true);
+    expect(observation.source).toBe("in_cloud");
+    expect(observation.verdict).toBe("unknown");
+    expect(observation.reviewRequired).toBe(true);
+    expect(observation.reasons.join(" ")).toContain("cloud answer accepted");
   });
 
   it("marks a rejected cloud answer for a person", async () => {

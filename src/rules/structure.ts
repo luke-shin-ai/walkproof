@@ -21,7 +21,7 @@ const DEFECT_LEXICON: LexiconEntry[] = [
   { type: "other", words: ["leak", "water", "damp", "loose", "sharp edge", "trip hazard", "noise"] },
 ];
 
-const ABSENT_WORDS = [
+export const ABSENT_WORDS = [
   "not visible",
   "cannot see",
   "can't see",
@@ -36,7 +36,13 @@ const ABSENT_WORDS = [
   "taken away",
 ];
 
-const OBSCURED_WORDS = [
+/**
+ * What an inspector writes when the observation itself was limited: glare, a
+ * cover in the way, or a line that says the writer could not tell. The same list
+ * marks a draft as obscured and stops the device from settling the item
+ * (`evidence.ts`), because a line that says "not sure" is not a determination.
+ */
+export const OBSCURED_WORDS = [
   "glare",
   "blur",
   "too dark to see",
@@ -56,7 +62,7 @@ const HIGH_WORDS = ["exposed", "severe", "major", "large", "wide", "deep", "spal
 const LOW_WORDS = ["slight", "minor", "small", "hairline", "surface only", "below threshold", "mark", "scuff"];
 
 /** True when the word appears at the start of a word, so "live" does not match "delivery". */
-function includesWord(text: string, word: string): boolean {
+export function includesWord(text: string, word: string): boolean {
   let index = text.indexOf(word);
   while (index >= 0) {
     if (index === 0 || !/[a-z]/.test(text[index - 1])) return true;
@@ -65,11 +71,17 @@ function includesWord(text: string, word: string): boolean {
   return false;
 }
 
-function includesAny(text: string, words: string[]): boolean {
+export function includesAny(text: string, words: string[]): boolean {
   return words.some((word) => includesWord(text, word));
 }
 
-function severityFor(text: string, defect: DefectType): Severity {
+/** The phrases from a list that the line actually contains. */
+export function matchedWords(text: string, words: string[]): string[] {
+  const lowered = text.toLowerCase();
+  return words.filter((word) => includesWord(lowered, word));
+}
+
+export function severityFor(text: string, defect: DefectType): Severity {
   if (defect === "none") return "none";
   if (includesAny(text, HIGH_WORDS)) return "high";
   if (includesAny(text, LOW_WORDS)) return "low";

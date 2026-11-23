@@ -1,6 +1,7 @@
 import { extractJsonObject } from "./ai/schema";
 import { trySpend, type KeyValueStore } from "./budget";
-import { addDays, judge } from "./rules/judge";
+import { judgeNote } from "./rules/evidence";
+import { addDays } from "./rules/judge";
 import { buildCloudPayload, structureNote } from "./rules/structure";
 import { verifyCloudAnswer } from "./rules/verify";
 import type {
@@ -116,12 +117,14 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
   }
 
   deps.onStage?.("judge");
-  const judgement = judge(item, finding, now);
-  let verdict: Verdict = judgement.verdict;
+  const decision = judgeNote(item, input.note, finding, now);
+  finding = decision.finding;
+  const judgement = decision.judgement;
+  let verdict: Verdict = decision.verdict;
   let source: InferenceSource = "on_device";
   let clauseIds = judgement.clauseIds;
   let latencyMs = deviceLatencyMs;
-  const collected: string[] = [...judgement.reasons, ...reasons];
+  const collected: string[] = [...decision.reasons, ...judgement.reasons, ...reasons];
 
   let cloud: CloudCheck | null = null;
 
@@ -159,7 +162,7 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
           collected.push(`cloud check failed: ${shortError(result.error)}`);
         } else {
           const extracted = extractJsonObject(result.raw);
-          const verification = verifyCloudAnswer(extracted.value, item, input.pack, verdict, finding, now);
+          const verification = verifyCloudAnswer(extracted.value, item, input.pack, verdict, finding, now, input.note);
           cloud = {
             model: result.model,
             modelFallback: result.modelFallback,
@@ -196,6 +199,12 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
     id: deps.makeId ? deps.makeId() : newId(item.id),
     itemId: item.id,
     label: item.label,
+    noteCheck: {
+      action: decision.evidence.action,
+      hold: decision.evidence.hold,
+      answerVerdict: decision.answerVerdict,
+      reasons: decision.reasons,
+    },
     zone: item.zone,
     photoName: input.photoName,
     photoBytes: input.photoBytes,
