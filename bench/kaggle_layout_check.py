@@ -70,7 +70,11 @@ def check(driver, url, tag, width, height, mobile, shot):
             "shot": shot,
         }
     )
-    print("LAYOUT", json.dumps(report, ensure_ascii=False), flush=True)
+    print(
+        f"CHECK {tag} overflow={report['overflow']} console={report['consoleSevere']} "
+        f"width={report['clientW']}",
+        flush=True,
+    )
     return report
 
 
@@ -82,7 +86,6 @@ def main():
         check(driver, SITE, "phone-390", 390, 844, True, "/kaggle/working/walkproof-pages-390.png")
         check(driver, BASE, "bench-desktop-1440", 1440, 900, False, "/kaggle/working/walkproof-bench-1440.png")
         check(driver, BASE, "bench-phone-390", 390, 844, True, "/kaggle/working/walkproof-bench-390.png")
-        errors = [entry for entry in driver.get_log("browser") if entry.get("level") == "SEVERE"]
         print("TOTAL_SEVERE", len(errors), flush=True)
     finally:
         driver.quit()
