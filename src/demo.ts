@@ -62,7 +62,7 @@ export const DEMO_STEPS: DemoStep[] = [
     itemId: "sd-08",
     photoUrl: smokeDetector,
     photoName: "smoke-detector.jpg",
-    note: "Painted over during the last refurbishment, no idea whether it still works.",
+    note: "Paint on the casing of the detector, a thin coat, looks minor.",
   },
   {
     itemId: "fd-09",

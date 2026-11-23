@@ -9,6 +9,18 @@ https://luke-shin-ai.github.io/walkproof/bench/ .
 | `results-kaggle-2026-11-23.json` | assembled from the file above by `scripts/assemble-d5.mjs` | the D5 run: forty observations on the device and through the hybrid, plus ten held-out notes on the device |
 | `results-kaggle-d4-2026-11-23.json` | the earlier session of the same day, kept as it was recorded | D4: the same forty observations before the answer was checked against the line, with a six item cloud only baseline |
 
+Both sessions were made with `gemini-3.5-flash-lite`, the app's one fallback,
+because the `gemini-4-hydrogen` daily free quota had been spent earlier that day.
+The D4 session ended 71 minutes before the D5 one, so any sentence that compares
+them means an hour apart on the same day, not days.
+
+The measured runs predate one code change: an item the device already left to a
+person because of the line is no longer sent to the cloud. The recorded hybrid
+numbers therefore include 17 calls on hedged lines that the shipped code would now
+keep with a person, and 3 calls on items the rule pack left open. The next run,
+planned in `recheck-2026-11-24.md`, measures the narrowed rule with
+`gemini-4-hydrogen`.
+
 `scripts/assemble-d5.mjs` recomputes every count from the per item table and
 refuses to write the JSON when one disagrees with what the session printed. The
 session was stopped before its output file could be exported, so the JSON is
@@ -32,11 +44,19 @@ assembled rather than copied; every number in it comes from the run.
 | request bytes to cloud | 0 | 7,595 | 0 |
 | gate refusals | n/a | 7 | n/a |
 
-The run before this one (D4, same day, same session shape, no check against the
-inspector's line) agreed on 24 of 40 on the device, settled 12 of the 20 open
-items, and had no gate refusal at all. `tests/d5-regression.test.ts` replays
-those answers through the shipped decision: 24 of 40 as they came back, 40 of 40
-after the check. That is a ceiling for the set the rules were written from.
+The run before this one (D4, an hour earlier on the same day, same session shape,
+no check against the inspector's line) agreed on 24 of 40 on the device, settled
+12 of the 20 open items, and had no gate refusal at all.
+`tests/d5-regression.test.ts` replays those answers through the shipped decision:
+24 of 40 as they came back, 40 of 40 after the check. That is a ceiling for the
+set the rules were written from.
+
+On the forty items the two arms disagreed on four: S18 (device fail, hybrid pass),
+S33 (device review, hybrid fail), S37 and S38 (device pass and fail, hybrid review
+for both). S18 and S33 carry `source: on_device` in both arms, so the difference
+is the on-device model reading the same line differently in two runs, not the
+cloud. Until the same arm is run twice in one session there is no number for that
+variation, which is what the next run adds.
 
 ## What is measured
 
@@ -53,8 +73,8 @@ are never counted with the forty.
 
 | path | code | what it does |
 |---|---|---|
-| on-device | `src/ai/hybrid.ts` (`ONLY_ON_DEVICE`), `src/rules/evidence.ts`, `src/rules/judge.ts` | Gemini Nano structures the line, the answer is checked against the line, the rule pack decides, the photo never leaves the device |
-| hybrid | `src/pipeline.ts` | the shipped flow: on-device first, cloud only for an `unknown` item, inside the daily budget, every answer checked by `src/rules/verify.ts` |
+| on-device | `src/ai/hybrid.ts` (`ONLY_ON_DEVICE`, or the browser `LanguageModel` in the published build), `src/rules/evidence.ts`, `src/rules/judge.ts` | Gemini Nano structures the line, the answer is checked against the line, the rule pack decides, the photo never leaves the device |
+| hybrid | `src/pipeline.ts` | the shipped flow: on-device first, cloud only for an item the rule pack leaves open on a decisive line, inside the daily budget, every answer checked by `src/rules/verify.ts`. The recorded run was made before the held line rule, so it shows more cloud calls than the shipped code makes |
 | cloud only | baseline in `src/bench/harness.ts` | every item goes to the cloud with its photo and its line; measured on six items in D4 because of the free tier |
 
 ## How to reproduce

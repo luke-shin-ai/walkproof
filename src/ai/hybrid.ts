@@ -64,6 +64,88 @@ export interface DeviceStructureResult {
   error: string | null;
 }
 
+/** Chrome's own on-device model, reached without a Firebase project. */
+interface BrowserLanguageSession {
+  prompt: (input: string, options?: { responseConstraint?: unknown }) => Promise<string>;
+  destroy?: () => void;
+}
+
+interface BrowserLanguageApi {
+  availability?: (options?: unknown) => Promise<string>;
+  create?: (options?: Record<string, unknown>) => Promise<BrowserLanguageSession>;
+}
+
+function browserLanguageApi(): BrowserLanguageApi | null {
+  const api = (globalThis as { LanguageModel?: BrowserLanguageApi }).LanguageModel;
+  return api && typeof api.create === "function" ? api : null;
+}
+
+/** True when this browser can structure notes without any Firebase project. */
+export function hasBrowserDeviceModel(): boolean {
+  return browserLanguageApi() !== null;
+}
+
+async function createBrowserSession(onProgress?: (value: number) => void): Promise<BrowserLanguageSession> {
+  const api = browserLanguageApi();
+  if (!api?.create) throw new Error("this browser has no built-in model");
+  const options: Record<string, unknown> = { expectedInputs: TEXT_INPUTS, expectedOutputs: TEXT_OUTPUTS };
+  if (onProgress) {
+    options.monitor = (monitor: { addEventListener: (event: string, handler: (event: { loaded: number }) => void) => void }) => {
+      monitor.addEventListener("downloadprogress", (event) => onProgress(event.loaded ?? 0));
+    };
+  }
+  return api.create(options);
+}
+
+/**
+ * The same on-device job through the browser's Prompt API.
+ *
+ * `firebase/ai` reaches Gemini Nano through a Firebase project, so a public
+ * build with no values cannot use it. Chrome also exposes the same model as
+ * `LanguageModel`, which needs no project, no key and no network once it is
+ * on the machine. A reviewer who opens the published page on a browser that
+ * has the model therefore gets the device path, exactly as a configured build
+ * would; a browser without it falls back to the rule parser.
+ */
+export async function warmBrowserDeviceModel(onProgress?: (value: number) => void): Promise<void> {
+  const session = await createBrowserSession(onProgress);
+  session.destroy?.();
+}
+
+export async function structureWithBrowserDevice(item: InspectionItem, note: string): Promise<DeviceStructureResult> {
+  const started = performance.now();
+  let session: BrowserLanguageSession | null = null;
+  try {
+    session = await createBrowserSession();
+    const prompt = buildStructurePrompt(item, note);
+    let raw: string;
+    try {
+      raw = await withTimeout(session.prompt(prompt, { responseConstraint: FINDING_SCHEMA }), 60_000, "the on-device model");
+    } catch (error) {
+      const message = `${(error as Error).name}: ${(error as Error).message}`;
+      /* An older build of the API does not take a response constraint. */
+      if (!/constraint|schema|typeerror|notsupported|not supported|invalid/i.test(message)) throw error;
+      raw = await withTimeout(session.prompt(prompt), 60_000, "the on-device model");
+    }
+    const parsed = parseFinding(raw);
+    return {
+      finding: parsed.finding,
+      raw,
+      latencyMs: Math.round(performance.now() - started),
+      error: parsed.finding ? null : parsed.problems.map((problem) => `${problem.field}: ${problem.problem}`).join(", "),
+    };
+  } catch (error) {
+    return {
+      finding: null,
+      raw: "",
+      latencyMs: Math.round(performance.now() - started),
+      error: `${(error as Error).name}: ${(error as Error).message}`,
+    };
+  } finally {
+    session?.destroy?.();
+  }
+}
+
 export async function structureWithDevice(item: InspectionItem, note: string): Promise<DeviceStructureResult> {
   const started = performance.now();
   try {

@@ -5,6 +5,17 @@ import { DEFAULT_PACK } from "../src/rules/pack";
 
 const photo = { name: "extinguisher.jpg", bytes: 1000, mime: "image/jpeg", dataUrl: "AAAA" };
 
+/**
+ * S27 is the one line in the forty that the rule pack leaves open without the
+ * line itself being the reason. Repeating it lets a test watch what happens to
+ * the items after one cloud answer stops the queue.
+ */
+function openScenarios(count: number) {
+  const base = BENCH_SCENARIOS.find((entry) => entry.id === "S27");
+  if (!base) throw new Error("S27 missing from the scenario set");
+  return Array.from({ length: count }, (_, index) => ({ ...base, id: `S27-${index + 1}` }));
+}
+
 function deps(overrides: Partial<BenchDeps> = {}): BenchDeps {
   return {
     pack: DEFAULT_PACK,
@@ -89,17 +100,53 @@ describe("the hybrid arm", () => {
           return {
             raw: "",
             latencyMs: 5,
-            error: "FirebaseError: 429 quota exceeded for metric generate_content_free_tier_requests",
+            error: "FirebaseError: 429 quota exceeded for metric generate_content_free_tier_requests, per day limit exceeded",
             model: "gemini-3.5-flash-lite",
             modelFallback: true,
             source: "unknown",
           };
         },
       }),
+      openScenarios(4),
     );
-    expect(calls).toBeLessThanOrEqual(4);
+    expect(calls).toBe(1);
     expect(result.metrics.cloudSkipped).toBeGreaterThan(0);
     expect(result.metrics.notes.join(" ")).toMatch(/quota|rate limit/);
+  });
+
+  it("asks the cloud only about items the rule pack left open on a decisive line", async () => {
+    const result = await runHybridArm(
+      deps({
+        classify: async () => ({
+          raw: JSON.stringify({
+            targetPresent: true,
+            targetName: "smoke detector",
+            defectType: "painted_over",
+            severity: "low",
+            obscured: false,
+            note: "thin paint on the casing",
+            clauseId: "SD-08",
+            remedy: "Wipe the casing and have someone check the detector.",
+            suggestedVerdict: "unknown",
+          }),
+          latencyMs: 20,
+          error: null,
+          model: "gemini-4-hydrogen",
+          modelFallback: false,
+          source: "in_cloud",
+        }),
+      }),
+    );
+    const sent = result.items.filter((entry) => entry.cloudCalled);
+    expect(sent.length).toBeGreaterThan(0);
+    for (const entry of sent) {
+      expect(entry.verdict).toBe("unknown");
+      expect(["kept", "amended"]).toContain(entry.evidence);
+    }
+    const held = result.items.filter((entry) => entry.evidence.startsWith("held"));
+    expect(held.length).toBeGreaterThan(0);
+    for (const entry of held) expect(entry.cloudCalled).toBe(false);
+    expect(result.metrics.cloudCalls).toBe(sent.length);
   });
 
   it("stops at the first daily quota answer and leaves the queue for tomorrow", async () => {

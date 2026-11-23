@@ -44,6 +44,11 @@ HOLDOUT = int(globals().get("HOLDOUT", 1))
 MODE = globals().get("MODE", "all")
 # How long a single item may stay on the same progress line before the run gives up.
 STALL_S = int(globals().get("STALL_S", 420))
+# A suffix for the files this session writes, so two sessions do not overwrite each other.
+TAG = globals().get("TAG", "")
+# 1: run the forty item arms a second time in the same session, so the spread of
+# one arm against itself is measured and not guessed.
+REPEAT = int(globals().get("REPEAT", 0))
 
 SITE = BASE.replace("bench/", "")
 
@@ -242,15 +247,35 @@ def main():
     layout = {}
     browser = new_driver(1440, 900)
     try:
-        layout["desktop"] = layout_report(browser, SITE, "desktop", "/kaggle/working/walkproof-pages-1440.png")
-        layout["mobile"] = layout_report(browser, SITE, "mobile", "/kaggle/working/walkproof-pages-390.png")
-        layout["bench_desktop"] = layout_report(browser, BASE, "bench-desktop", "/kaggle/working/walkproof-bench-1440.png")
-        layout["bench_mobile"] = layout_report(browser, BASE, "bench-mobile", "/kaggle/working/walkproof-bench-390.png")
+        layout["desktop"] = layout_report(browser, SITE, "desktop", f"/kaggle/working/walkproof-pages-1440{TAG}.png")
+        layout["mobile"] = layout_report(browser, SITE, "mobile", f"/kaggle/working/walkproof-pages-390{TAG}.png")
+        layout["bench_desktop"] = layout_report(browser, BASE, "bench-desktop", f"/kaggle/working/walkproof-bench-1440{TAG}.png")
+        layout["bench_mobile"] = layout_report(browser, BASE, "bench-mobile", f"/kaggle/working/walkproof-bench-390{TAG}.png")
 
         browser.set_window_size(1440, 900)
 
         local = run_arms(browser, device=True, hybrid=True, cloud=False, count=CLOUD_ONLY)
         print("forty item arms done", flush=True)
+
+        arms = list(local.get("arms", []))
+        items = dict(local.get("items", {}))
+
+        if REPEAT:
+            repeat = run_arms(browser, device=True, hybrid=True, cloud=False, count=CLOUD_ONLY)
+            print("the same arms a second time", flush=True)
+            for arm in repeat.get("arms", []):
+                name = f"{arm['arm']}_rerun"
+                arms.append({**arm, "arm": name})
+                items[name] = repeat["items"][arm["arm"]]
+            for arm_name in ("device", "hybrid"):
+                first = {row["scenario"]: row for row in local.get("items", {}).get(arm_name, [])}
+                second = {row["scenario"]: row for row in repeat.get("items", {}).get(arm_name, [])}
+                differ = [
+                    scenario
+                    for scenario, row in first.items()
+                    if scenario in second and second[scenario].get("recorded") != row.get("recorded")
+                ]
+                print(f"VARIATION {arm_name} {len(differ)} of {len(first)} {sorted(differ)}", flush=True)
 
         heldout = None
         if HOLDOUT:
@@ -268,8 +293,8 @@ def main():
             "environment": local.get("environment"),
             "host": "Kaggle Notebooks free CPU session, Chrome on Linux under Xvfb",
             "layout": layout,
-            "arms": local.get("arms", []) + (cloud.get("arms", []) if cloud else []),
-            "items": {**local.get("items", {}), **(cloud.get("items", {}) if cloud else {})},
+            "arms": arms + (cloud.get("arms", []) if cloud else []),
+            "items": {**items, **(cloud.get("items", {}) if cloud else {})},
         }
         if heldout:
             results["holdout"] = {"metrics": heldout["arms"][0], "items": heldout["items"]["device"]}
@@ -313,7 +338,7 @@ def main():
             )
         print("ITEMS_END", flush=True)
 
-        with open("/kaggle/working/walkproof-bench-result.json", "w") as handle:
+        with open(f"/kaggle/working/walkproof-bench-result{TAG}.json", "w") as handle:
             json.dump(results, handle, indent=1)
 
         print("METRICS_BEGIN", flush=True)

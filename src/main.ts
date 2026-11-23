@@ -1,5 +1,14 @@
 import "./style.css";
-import { classifyWithCloud, CLOUD_MODEL, deviceAvailability, structureWithDevice, warmDeviceModel } from "./ai/hybrid";
+import {
+  classifyWithCloud,
+  CLOUD_MODEL,
+  deviceAvailability,
+  hasBrowserDeviceModel,
+  structureWithBrowserDevice,
+  structureWithDevice,
+  warmBrowserDeviceModel,
+  warmDeviceModel,
+} from "./ai/hybrid";
 import { browserStore, readBudget } from "./budget";
 import { hasFirebaseConfig, initFirebase } from "./config/firebase";
 import { loadRulePack } from "./config/remoteConfig";
@@ -222,6 +231,16 @@ function latestFor(itemId: string): Observation | undefined {
   return state.observations.filter((entry) => entry.itemId === itemId).at(-1);
 }
 
+/**
+ * The cloud is asked only about an item the device could not settle by rule.
+ * When the line itself is why the item is open, a bigger model reading the same
+ * line cannot settle it either, so the item stays with a person and the day's
+ * cloud budget is not spent on it.
+ */
+function canRetryInCloud(observation: Observation): boolean {
+  return Boolean(observation.reviewRequired && observation.finding && observation.noteCheck?.hold === "none");
+}
+
 function summary(): WalkSummary {
   return summarize(state.observations, state.pack.items.length);
 }
@@ -243,9 +262,12 @@ function stageReporter(item: { label: string }): (stage: Stage) => void {
 }
 
 function deps(onStage?: (stage: Stage) => void): PipelineDeps {
-  const canDevice = state.firebaseReady && state.device === "ready";
+  /* The device model is the browser's own when this build has no Firebase
+     project, so the published page still runs the on-device path. */
+  const ready = state.device === "ready";
+  const structure = state.firebaseReady ? structureWithDevice : structureWithBrowserDevice;
   return {
-    structureOnDevice: canDevice ? (item, note) => structureWithDevice(item, note) : undefined,
+    structureOnDevice: ready ? (item, note) => structure(item, note) : undefined,
     classify: state.firebaseReady && state.online ? (item, payload) => classifyWithCloud(item, payload) : undefined,
     online: state.online,
     budgetStore: browserStore(),
@@ -266,6 +288,18 @@ function sleep(ms: number): Promise<void> {
 
 /* ------------------------------------------------------------------ render */
 
+/**
+ * What this build actually runs. The line under the page said which models a
+ * configured build uses even when this build had no Firebase values, so it
+ * described something the page could not do.
+ */
+function footText(): string {
+  if (!state.firebaseReady) {
+    return "Built-in demo mode: on-device structuring when supported, cloud checks off";
+  }
+  return `Firebase AI Logic hybrid / Gemini Nano on device / ${esc(state.cloudModel)} for unknowns`;
+}
+
 function badgeRow(): string {
   const pack = state.pack;
   const originLabel = state.packOrigin === "remote" ? "remote" : state.packOrigin === "cache" ? "cached" : "built-in";
@@ -274,8 +308,14 @@ function badgeRow(): string {
       ? "on-device model ready"
       : state.device === "checking"
         ? "device: checking"
-        : `device: ${state.device}`;
-  const cloud = state.cloudFallback ? `cloud: ${state.cloudModel} (fallback)` : `cloud: ${state.cloudModel}`;
+        : state.device === "downloadable"
+          ? "device model: press prepare"
+          : "device: unavailable";
+  const cloud = !state.firebaseReady
+    ? `cloud: ${state.cloudModel} (not configured)`
+    : state.cloudFallback
+      ? `cloud: ${state.cloudModel} (fallback)`
+      : `cloud: ${state.cloudModel}`;
   const net = state.online ? "online" : "offline";
   return [
     `<span class="badge strong" title="${esc(state.packDetail)}">pack ${esc(pack.version)} <span class="badge-sub">${originLabel}</span></span>`,
@@ -345,11 +385,13 @@ function resultBlock(item: RulePack["items"][number], observation: Observation |
     }
   } else if (observation.verdict === "unknown") {
     details.push(
-      !state.firebaseReady
-        ? "Cloud checks are off in this build, so the item is marked for a person."
-        : !state.online
-          ? "No network. The item waits in the queue for a cloud check."
-          : "No cloud call was made for this item.",
+      observation.noteCheck && observation.noteCheck.hold !== "none"
+        ? "The line is why this item is open, so it was not sent to the cloud and no budget was spent."
+        : !state.firebaseReady
+          ? "Cloud checks are off in this build, so the item is marked for a person."
+          : !state.online
+            ? "No network. The item waits in the queue for a cloud check."
+            : "No cloud call was made for this item.",
     );
   }
 
@@ -406,7 +448,7 @@ function summaryCard(): string {
 
 function actionsCard(): string {
   const stats = summary();
-  const queued = state.observations.filter((entry) => entry.reviewRequired && entry.finding).length;
+  const queued = state.observations.filter((entry) => canRetryInCloud(entry)).length;
   return `
     <div class="card actions">
       <button class="primary" id="run-demo" ${state.busyAll ? "disabled" : ""}>${state.busyAll ? "Running the sample walkthrough..." : "Load the sample walkthrough"}</button>
@@ -419,6 +461,11 @@ function actionsCard(): string {
       <button id="export-csv" ${stats.checked ? "" : "disabled"}>Export ledger CSV</button>
       <button id="print-record" ${stats.checked ? "" : "disabled"}>Print inspection record</button>
       <button class="quiet" id="clear-walk" ${stats.checked ? "" : "disabled"}>Clear this walkthrough</button>
+      ${
+        state.device === "downloadable"
+          ? `<p class="small">This browser has the on-device model but has not downloaded it yet. Prepare it once and every note after that is structured here.</p>`
+          : ""
+      }
     </div>`;
 }
 
@@ -493,7 +540,7 @@ function gateSection(): string {
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <p class="small">The same forty observations are measured on the <a href="./bench/">forty item page</a>: on-device path, cloud only baseline and this hybrid, with the answers each one produced.</p>
+      <p class="small">The same forty observations are measured on the <a href="./bench/">forty item page</a>: the on-device path and the shipped hybrid, with the answers each one produced and an earlier six item cloud only baseline beside them.</p>
     </section>`;
 }
 
@@ -640,7 +687,7 @@ function render(): void {
           <ol>
             <li>The note is structured on the device into one schema. Without the on-device model, the built-in rule parser does it.</li>
             <li>The rule pack decides pass, fail or unknown. A model never sets the verdict on its own.</li>
-            <li>Only an unknown item goes to the cloud, inside the day's budget, as a typed summary.</li>
+            <li>Only an item the rule pack leaves open, on a line that was decisive, goes to the cloud, inside the day's budget, as a typed summary. A line that says the observer could not tell goes straight to a person.</li>
             <li>The answer is checked on the device. A wrong clause, a missing field or a contradiction is rejected and handed to a person.</li>
           </ol>
         </div>
@@ -653,7 +700,7 @@ function render(): void {
 
     <footer class="foot">
       <span>WalkProof / ${stats.checked} of ${stats.total} recorded</span>
-      <span>Firebase AI Logic hybrid / Gemini Nano on device / ${esc(state.cloudModel)} for unknowns</span>
+      <span>${footText()}</span>
     </footer>`;
 
   bind();
@@ -800,7 +847,7 @@ async function runDemo(): Promise<void> {
 async function retryQueued(): Promise<void> {
   if (state.busyAll) return;
   state.busyAll = true;
-  const waiting = state.observations.filter((entry) => entry.reviewRequired && entry.finding);
+  const waiting = state.observations.filter((entry) => canRetryInCloud(entry));
   for (const previous of waiting) {
     const item = findItem(state.pack, previous.itemId);
     if (!item) continue;
@@ -834,12 +881,20 @@ async function retryQueued(): Promise<void> {
 }
 
 async function prepareDevice(): Promise<void> {
-  setStatus("Preparing the on-device model. The first run downloads it.");
+  const viaFirebase = state.firebaseReady;
+  setStatus(
+    viaFirebase
+      ? "Preparing the on-device model. The first run downloads it."
+      : "Preparing this browser's built-in model. The first run downloads it.",
+  );
   render();
+  const reportProgress = (value: number) => setStatus(`On-device model download ${(value * 100).toFixed(0)}%`);
   try {
-    await warmDeviceModel((value) => {
-      setStatus(`On-device model download ${(value * 100).toFixed(0)}%`);
-    });
+    if (viaFirebase) {
+      await warmDeviceModel(reportProgress);
+    } else {
+      await warmBrowserDeviceModel(reportProgress);
+    }
     state.device = "ready";
     state.deviceDetail = "The on-device model is ready and structures notes on this device.";
     setStatus("On-device model ready. Notes are now structured on this device.");
@@ -884,12 +939,15 @@ async function boot(): Promise<void> {
 
   void deviceAvailability().then((value) => {
     state.device = value === "available" ? "ready" : value === "downloadable" || value === "downloading" ? "downloadable" : "unavailable";
-    state.deviceDetail = `LanguageModel.availability(): ${value}`;
+    state.deviceDetail = hasBrowserDeviceModel()
+      ? `LanguageModel.availability(): ${value}. This browser can structure notes without a Firebase project.`
+      : `LanguageModel.availability(): ${value}`;
     render();
   });
 
   if (!state.firebaseReady) {
-    state.packDetail = "Firebase values are not loaded in this build, so the built-in pack is used and cloud checks are off.";
+    state.packDetail =
+      "Firebase values are not loaded in this build, so the built-in pack is used and cloud checks are off. The on-device model still runs here when this browser has one.";
     render();
     return;
   }

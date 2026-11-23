@@ -10,7 +10,7 @@
     <title>WalkProof / 40 item measurement</title>
     <meta
       name="description"
-      content="Measured comparison of the on-device path, the cloud only baseline and the WalkProof hybrid across forty building safety observations."
+      content="Measured comparison of the on-device path and the WalkProof hybrid across forty building safety observations, with an earlier six item cloud only baseline."
     />
     <link rel="stylesheet" href="./bench.css" />
   </head>
@@ -18,11 +18,12 @@
     <header class="head">
       <a class="back" href="../">WalkProof</a>
       <div>
-        <h1>Forty observations, three paths</h1>
+        <h1>Forty observations, two recorded paths</h1>
         <p class="lede">
-          The same forty notes and photos go through the on-device path, a cloud only baseline and the shipped hybrid. A
-          run needs the Firebase config in the URL fragment; the recorded run below needs nothing and is what the
-          README quotes.
+          The same forty notes and photos go through the on-device path and the shipped hybrid. A cloud only baseline was
+          run once on six items and is kept apart below, because the free tier allows 20 requests per model per day and
+          the recorded run spent them on the hybrid. A run needs the Firebase config in the URL fragment; the recorded
+          run below needs nothing and is what the README quotes.
         </p>
       </div>
     </header>
@@ -38,6 +39,10 @@
           <label class="slim">cloud only items <input type="number" id="opt-count" value="10" min="1" max="40" /></label>
         </div>
         <p class="status" id="status" role="status" aria-live="polite">Checking this browser.</p>
+        <p class="small" id="model-note">
+          The recorded run used the fallback model gemini-3.5-flash-lite, because the gemini-4-hydrogen free daily quota
+          had been spent earlier that day.
+        </p>
         <div class="probe" id="probe"></div>
       </section>
 
@@ -47,6 +52,16 @@
         <h2>Recorded run</h2>
         <p class="small" id="recorded-note">Loading the recorded run.</p>
         <div id="recorded"></div>
+      </section>
+
+      <section class="card" id="baseline-card">
+        <h2>Earlier cloud only baseline</h2>
+        <p class="small">
+          Six items went to the cloud with their photos on 2026-11-23, an hour before the recorded run: 6 of 6 agreed
+          with the human key, 535,758 photo bytes and 718,749 request bytes left the browser, and no answer was refused.
+          It is not repeated here because the same free daily quota covers it. The product does not send a photo to a
+          model; this baseline is what the hybrid is measured against.
+        </p>
       </section>
     </main>
 

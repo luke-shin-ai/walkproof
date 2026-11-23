@@ -128,7 +128,13 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
 
   let cloud: CloudCheck | null = null;
 
-  if (verdict === "unknown" && finding && deps.classify) {
+  /* The device has already handed an item to a person when the line itself is
+     why it cannot be settled. A bigger model reading the same line cannot see
+     more than the inspector did, so those items are not sent and the day's
+     cloud budget is kept for items the rule pack alone leaves open. */
+  const heldByLine = decision.evidence.hold !== "none";
+
+  if (verdict === "unknown" && finding && deps.classify && !heldByLine) {
     if (!deps.online) {
       collected.push("offline: the item waits for a cloud check when the device has signal");
     } else {
@@ -193,6 +199,9 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
   }
 
   const reviewRequired = verdict === "unknown" || source === "rejected_unsupported";
+  if (verdict === "unknown" && heldByLine) {
+    collected.push("not sent to the cloud: the line itself is why the device left this item to a person");
+  }
   deps.onStage?.("done");
 
   return {

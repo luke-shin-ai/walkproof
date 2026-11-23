@@ -8,6 +8,11 @@ import type { Observation } from "../src/types";
 const NOW = new Date("2026-11-23T09:00:00Z");
 const TODAY = "2026-11-23";
 
+/** A line that says what the inspector saw, so the cloud may be asked. */
+const OPEN_NOTE = "Paint on the casing of the detector, a thin coat, looks minor.";
+/** A line that says the observation was limited, so nobody else can settle it. */
+const HEDGED_NOTE = "Painted over during the last refurbishment, no idea whether it still works.";
+
 function store(seed?: string): KeyValueStore {
   const map = new Map<string, string>();
   if (seed) map.set(BUDGET_KEY, seed);
@@ -41,16 +46,16 @@ function deps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
   };
 }
 
-const cloudAnswer = {
+const openAnswer = {
   targetPresent: true,
   targetName: "smoke detector",
   defectType: "painted_over",
-  severity: "medium",
+  severity: "low",
   obscured: false,
-  note: "detector painted during the refit",
+  note: "thin paint on the casing",
   clauseId: "SD-08",
-  remedy: "Replace the painted detector and test it.",
-  suggestedVerdict: "fail",
+  remedy: "Wipe the casing and record the detector as open until someone checks it.",
+  suggestedVerdict: "unknown",
 };
 
 describe("cloud error text", () => {
@@ -88,60 +93,47 @@ describe("item pipeline", () => {
     expect(observation.fixBy).toBe("2026-11-26");
   });
 
-  it("sends only an unknown item to the cloud and refuses an answer that settles a line the person left open", async () => {
+  it("keeps a line that says the observation was limited away from the cloud", async () => {
+    let cloudCalls = 0;
+    const observation = await processItem(input("sd-08", HEDGED_NOTE), {
+      ...deps(),
+      classify: async () => {
+        cloudCalls += 1;
+        return { raw: JSON.stringify(openAnswer), latencyMs: 1400, error: null, model: "gemini-4-hydrogen", modelFallback: false, source: "in_cloud" };
+      },
+    });
+    expect(cloudCalls).toBe(0);
+    expect(observation.cloud).toBeNull();
+    expect(observation.noteCheck?.hold).toBe("inconclusive");
+    expect(observation.verdict).toBe("unknown");
+    expect(observation.reviewRequired).toBe(true);
+    expect(observation.reasons.join(" ")).toContain("not sent to the cloud");
+  });
+
+  it("sends an item the rule pack leaves open and accepts an answer the gate can verify", async () => {
     const sent: string[] = [];
-    const observation = await processItem(input("sd-08", "Painted over during the refit, no idea whether it still works."), {
+    const observation = await processItem(input("sd-08", OPEN_NOTE), {
       ...deps(),
       classify: async (_item, payload) => {
         sent.push(JSON.stringify(payload));
-        return { raw: JSON.stringify(cloudAnswer), latencyMs: 1400, error: null, model: "gemini-4-hydrogen", modelFallback: false, source: "in_cloud" };
+        return { raw: JSON.stringify(openAnswer), latencyMs: 1400, error: null, model: "gemini-4-hydrogen", modelFallback: false, source: "in_cloud" };
       },
     });
-    expect(observation.cloud).not.toBeNull();
-    expect(observation.cloud?.accepted).toBe(false);
-    expect(observation.source).toBe("rejected_unsupported");
-    expect(observation.verdict).toBe("unknown");
-    expect(observation.fixBy).toBeNull();
-    expect(observation.cloud?.reasons.join(" ")).toContain("not conclusive");
     expect(sent).toHaveLength(1);
     expect(sent[0]).not.toContain("data:image");
     expect(observation.cloud?.payloadBytes).toBeGreaterThan(50);
-  });
-
-  it("accepts a cloud answer that keeps an open line open and adds a remedy", async () => {
-    const observation = await processItem(input("sp-10", "Head looks painted, not sure whether that is allowed."), {
-      ...deps(),
-      classify: async () => ({
-        raw: JSON.stringify({
-          targetPresent: true,
-          targetName: "sprinkler head",
-          defectType: "none",
-          severity: "none",
-          obscured: true,
-          note: "the line does not settle whether paint reached the bulb",
-          clauseId: "SP-10",
-          remedy: "Have someone look at the head from a ladder and record it.",
-          suggestedVerdict: "unknown",
-        }),
-        latencyMs: 1200,
-        error: null,
-        model: "gemini-4-hydrogen",
-        modelFallback: false,
-        source: "in_cloud",
-      }),
-    });
     expect(observation.cloud?.accepted).toBe(true);
     expect(observation.source).toBe("in_cloud");
     expect(observation.verdict).toBe("unknown");
-    expect(observation.reviewRequired).toBe(true);
+    expect(observation.clauseIds).toEqual(["SD-08"]);
     expect(observation.reasons.join(" ")).toContain("cloud answer accepted");
   });
 
   it("marks a rejected cloud answer for a person", async () => {
-    const observation = await processItem(input("sp-10", "Head looks painted, not sure whether that is allowed."), {
+    const observation = await processItem(input("sd-08", OPEN_NOTE), {
       ...deps(),
       classify: async () => ({
-        raw: JSON.stringify({ ...cloudAnswer, clauseId: "FE-01" }),
+        raw: JSON.stringify({ ...openAnswer, clauseId: "FE-01" }),
         latencyMs: 900,
         error: null,
         model: "gemini-4-hydrogen",
@@ -155,9 +147,9 @@ describe("item pipeline", () => {
     expect(observation.reasons.join(" ")).toContain("rejected");
   });
 
-  it("keeps an unknown item queued when the device is offline", async () => {
+  it("keeps an open item queued when the device is offline", async () => {
     let cloudCalls = 0;
-    const observation = await processItem(input("sd-08", "Painted over during the refit, no idea whether it still works."), {
+    const observation = await processItem(input("sd-08", OPEN_NOTE), {
       ...deps({ online: false }),
       classify: async () => {
         cloudCalls += 1;
@@ -172,7 +164,7 @@ describe("item pipeline", () => {
 
   it("does not spend past the daily budget", async () => {
     let cloudCalls = 0;
-    const observation = await processItem(input("sd-08", "Painted over during the refit, no idea whether it still works."), {
+    const observation = await processItem(input("sd-08", OPEN_NOTE), {
       ...deps({ budgetStore: store(JSON.stringify({ day: TODAY, spent: 20, limit: 20 })) }),
       classify: async () => {
         cloudCalls += 1;
@@ -195,7 +187,7 @@ describe("item pipeline", () => {
   });
 
   it("records a cloud error without losing the device finding", async () => {
-    const observation = await processItem(input("sd-08", "Painted over during the refit, no idea whether it still works."), {
+    const observation = await processItem(input("sd-08", OPEN_NOTE), {
       ...deps(),
       classify: async () => ({
         raw: "",
