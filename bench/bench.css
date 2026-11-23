@@ -53,10 +53,14 @@ h1 {
 main {
   padding: 20px 24px 60px;
   display: grid;
+  /* minmax(0, ...) keeps a wide table inside its own scroll box instead of
+     stretching the page on a phone. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
 .card {
+  min-width: 0;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -156,6 +160,7 @@ label.slim input {
 
 .scroll {
   overflow-x: auto;
+  max-width: 100%;
 }
 
 table {
