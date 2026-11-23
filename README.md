@@ -62,9 +62,10 @@ whether the pack settled the item. A line that says the observer could not tell
 is still never sent, and the cloud still never receives a photo.
 
 Where the line supports a change, the device narrows the answer before the pack
-judges it, using the same cross check it applies to its own reading. A cloud that
-names a defect without a severity gets the severity the line's own words carry. A
-cloud that claims an absence the line does not state is refused.
+judges it, using the same cross check it applies to its own reading. A defect
+without a severity gets the severity the line's own words carry, and an absence
+claim is dropped when the line names a defect the device can record. A claim the
+line cannot carry at all is refused, and the item goes to a person.
 
 The ten cloud path notes (`?set=open` on the bench page, `src/bench/scenarios.ts`)
 were written for this path: each is decisive, each names the defect and scores it
