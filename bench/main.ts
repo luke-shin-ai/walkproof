@@ -272,24 +272,35 @@ async function run(options: Options): Promise<void> {
   state.running = true;
   state.status = "running";
   state.startedAt = new Date().toISOString();
+  state.results = null;
   if (runButton) runButton.disabled = true;
+  if (liveEl) liveEl.innerHTML = "";
 
   try {
     if (!hasFirebaseConfig()) throw new Error("no Firebase config in the URL fragment or the build");
+
+    /* Started before any await, so the click that got here is still the user
+       gesture the on-device model needs for its first session. */
+    const wantsDevice = options.device || options.hybrid;
+    let warm: Promise<void> | null = null;
+    if (wantsDevice) {
+      say("Preparing the on-device model. The first run downloads it.");
+      warm = warmDeviceModel((progress) => {
+        say(`Preparing the on-device model: ${Math.round((progress ?? 0) * 100)}%`);
+      });
+      warm.catch(() => undefined);
+    }
+
     const env = await environment();
     state.environment = env;
     if (probeEl) {
       probeEl.textContent = `cores ${String(env.cores)} / memory ${String(env.deviceMemoryGB)} GB / WebGPU ${String(env.webgpu)} / LanguageModel ${String(env.languageModel)} / availability ${String(env.deviceAvailability)}`;
     }
 
-    const wantsDevice = options.device || options.hybrid;
     let deviceReady = false;
-    if (wantsDevice) {
-      say("Preparing the on-device model. The first run downloads it.");
+    if (warm) {
       try {
-        await warmDeviceModel((progress) => {
-          say(`Preparing the on-device model: ${Math.round((progress ?? 0) * 100)}%`);
-        });
+        await warm;
         deviceReady = true;
       } catch (error) {
         say(`The on-device model could not be prepared (${(error as Error).message}). The rule parser takes its place.`);
