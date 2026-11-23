@@ -27,7 +27,7 @@ const get = (name) => params.get(name) || "";
 
 try {
   const { initializeApp } = await import(`${SDK}/firebase-app.js`);
-  const { initializeAppCheck, ReCaptchaEnterpriseProvider } = await import(`${SDK}/firebase-app-check.js`);
+  const { initializeAppCheck, getToken, ReCaptchaEnterpriseProvider } = await import(`${SDK}/firebase-app-check.js`);
   const { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } = await import(`${SDK}/firebase-ai.js`);
 
   note("userAgent", navigator.userAgent);
@@ -50,7 +50,7 @@ try {
       provider: new ReCaptchaEnterpriseProvider(get("siteKey") || "placeholder-site-key"),
       isTokenAutoRefreshEnabled: true,
     });
-    const result = await appCheck.getToken(false);
+    const result = await getToken(appCheck, false);
     note("appcheck.getToken", `ok tokenLen=${(result.token || "").length}`);
   } catch (error) {
     note("appcheck.error", `${error.name}: ${error.message}`);
