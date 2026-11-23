@@ -43,12 +43,12 @@ Chrome requires. The one schema object in `src/ai/schema.ts` is passed to both
 paths: `onDeviceParams.promptOptions.responseConstraint` and
 `inCloudParams.generationConfig.responseSchema`.
 
-`LanguageModel.availability()` with image input is the gate. Chrome desktop needs
-the profile volume to have 22 GB free and either 4 GB of VRAM or 4 cores with
-16 GB of RAM. The flag
-`chrome://flags/#prompt-api-for-gemini-nano-multimodal-input` decides whether the
-image input path exists on a given build; the gate document records what was
-measured with and without it.
+Image input is accepted by Chrome 158 without any flag, but the answers measured
+on 2026-11-23 did not match the photos: five inspection shots produced generic
+labels such as `someTarget` and `sensor_1`, with 2 of 5 target presence calls
+correct. Photo judgement is therefore not part of the on-device job. The device
+structures the inspector's line note, keeps the photo, and asks for a human
+confirmation. Numbers and the reproduction notebook: `docs/vision-gate.md`.
 
 ## Repository layout
 
