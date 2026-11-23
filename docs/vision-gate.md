@@ -51,7 +51,7 @@ capability the model does not have.
 
 ## Reproduce
 
-Import `hackathons/buildhybridai-2026/probe/kaggle/kaggle-vision-gate.ipynb` into
+Import `probe/vision-gate.ipynb` into
 a Kaggle CPU session with internet on and run all cells. Keep the Chrome profile
 under `/tmp`; `/kaggle/working` is 20 GiB and misses the 22 GB requirement. The
 fixtures are fetched from this repository's raw URLs.
