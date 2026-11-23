@@ -7,6 +7,7 @@ import { DEMO_STEPS, loadDemoPhoto } from "./demo";
 import { ledgerCsv, reportModel, summarize, type WalkSummary } from "./ledger";
 import { preparePhoto } from "./photo";
 import { processItem, type PipelineDeps, type Stage } from "./pipeline";
+import { verifyCloudAnswer } from "./rules/verify";
 import { DEFAULT_PACK, clauseText, findItem, type PackOrigin, type RulePack } from "./rules/pack";
 import { clearWalk, deleteCapture, loadObservations, putCapture, saveObservation, type QueuedCapture } from "./storage/queue";
 import type { Observation, WalkInfo } from "./types";
@@ -29,6 +30,8 @@ interface AppState {
   deviceDetail: string;
   cloudModel: string;
   cloudFallback: boolean;
+  /** Answers the gate was asked to check in the sample panel, by sample id. */
+  gate: Record<string, { accepted: boolean; reasons: string[] }>;
 }
 
 function todayIso(): string {
@@ -56,7 +59,94 @@ const state: AppState = {
   deviceDetail: "",
   cloudModel: CLOUD_MODEL,
   cloudFallback: false,
+  gate: {},
 };
+
+interface GateSample {
+  id: string;
+  itemId: string;
+  label: string;
+  answer: Record<string, unknown>;
+}
+
+/**
+ * Four answers a cloud model could plausibly return, kept in the page so the
+ * gate can be tried without a key and without a network.
+ */
+const GATE_SAMPLES: GateSample[] = [
+  {
+    id: "good",
+    itemId: "fe-01",
+    label: "A supported answer: extinguisher present, clause FE-01, pass",
+    answer: {
+      targetPresent: true,
+      targetName: "fire extinguisher",
+      defectType: "none",
+      severity: "none",
+      obscured: false,
+      note: "cabinet intact, gauge in the green",
+      clauseId: "FE-01",
+      remedy: "No action today, keep the monthly tag filled in.",
+      suggestedVerdict: "pass",
+    },
+  },
+  {
+    id: "wrong-clause",
+    itemId: "fe-01",
+    label: "A clause that exists but does not apply to this item (ST-04)",
+    answer: {
+      targetPresent: true,
+      targetName: "fire extinguisher",
+      defectType: "none",
+      severity: "none",
+      obscured: false,
+      note: "cabinet intact",
+      clauseId: "ST-04",
+      remedy: "No action today.",
+      suggestedVerdict: "pass",
+    },
+  },
+  {
+    id: "overrule",
+    itemId: "el-03",
+    label: "Exposed live parts but the model suggests pass",
+    answer: {
+      targetPresent: true,
+      targetName: "distribution board",
+      defectType: "exposed_parts",
+      severity: "high",
+      obscured: false,
+      note: "cover off, busbars exposed",
+      clauseId: "EL-03",
+      remedy: "Refit the cover before the board is left unattended.",
+      suggestedVerdict: "pass",
+    },
+  },
+  {
+    id: "thin",
+    itemId: "sd-08",
+    label: "An answer with no remedy and no clause",
+    answer: {
+      targetPresent: true,
+      targetName: "smoke detector",
+      defectType: "painted_over",
+      severity: "medium",
+      obscured: false,
+      note: "paint on the casing",
+      clauseId: "",
+      remedy: "",
+      suggestedVerdict: "fail",
+    },
+  },
+];
+
+function checkGateSample(sample: GateSample): void {
+  const item = state.pack.items.find((entry) => entry.id === sample.itemId);
+  if (!item) return;
+  const verification = verifyCloudAnswer(sample.answer, item, state.pack, "unknown", null, new Date());
+  state.gate[sample.id] = { accepted: verification.accepted, reasons: verification.reasons };
+  render();
+}
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("app root missing");
@@ -358,6 +448,36 @@ function ledgerSection(): string {
     </section>`;
 }
 
+function gateSection(): string {
+  const rows = GATE_SAMPLES.map((sample) => {
+    const outcome = state.gate[sample.id];
+    const verdict = outcome
+      ? outcome.accepted
+        ? `<span class="gate-ok">accepted</span>`
+        : `<span class="gate-no">refused</span><ul class="rejections">${outcome.reasons.map((reason) => `<li>${esc(reason)}</li>`).join("")}</ul>`
+      : "";
+    return `<tr>
+      <td>${esc(sample.label)}</td>
+      <td><button class="quiet gate-try" data-gate="${esc(sample.id)}">Check this answer</button></td>
+      <td>${verdict}</td>
+    </tr>`;
+  }).join("");
+  return `
+    <section class="card gate">
+      <div class="section-head">
+        <h2>Try the verification gate</h2>
+        <p>Four answers a cloud model could send back. The device checks each one before it can change a record, with no network and no key.</p>
+      </div>
+      <div class="scroll">
+        <table class="gate-table">
+          <thead><tr><th>Answer</th><th></th><th>Gate</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p class="small">The same forty observations are measured on the <a href="./bench/">forty item page</a>: on-device path, cloud only baseline and this hybrid, with the answers each one produced.</p>
+    </section>`;
+}
+
 function reportSection(): string {
   const model = reportModel(state.walk, state.observations, state.pack);
   const hasRecords = model.summary.checked > 0;
@@ -509,6 +629,7 @@ function render(): void {
     </div>
 
     ${ledgerSection()}
+    ${gateSection()}
     ${reportSection()}
 
     <footer class="foot">
@@ -532,6 +653,12 @@ function render(): void {
 /* ------------------------------------------------------------------- events */
 
 function bind(): void {
+  document.querySelectorAll<HTMLButtonElement>("[data-gate]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const sample = GATE_SAMPLES.find((entry) => entry.id === button.dataset.gate);
+      if (sample) checkGateSample(sample);
+    });
+  });
   document.querySelectorAll<HTMLInputElement>("[data-note]").forEach((input) => {
     input.addEventListener("input", () => {
       const itemId = input.dataset.note;

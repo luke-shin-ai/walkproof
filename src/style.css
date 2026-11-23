@@ -1151,3 +1151,46 @@ tbody tr:last-child td {
     color: #333;
   }
 }
+
+/* Verification gate panel: try an answer without a key. */
+.gate .gate-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.gate .gate-table th,
+.gate .gate-table td {
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 8px;
+}
+
+.gate .gate-table th {
+  color: var(--muted, #5b6b67);
+  font-weight: 600;
+}
+
+.gate .gate-ok {
+  color: #1f6b4a;
+  font-weight: 600;
+}
+
+.gate .gate-no {
+  color: #9b2c2c;
+  font-weight: 600;
+}
+
+.gate .rejections {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: #9b2c2c;
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .gate .gate-table td:first-child {
+    min-width: 180px;
+  }
+}

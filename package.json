@@ -13,7 +13,9 @@
     "test:watch": "vitest",
     "check:ai-tells": "node scripts/check-ai-tells.mjs",
     "verify": "npm run config:template && npm run test && npm run build && npm run check:ai-tells",
-    "config:template": "node scripts/make-remoteconfig-template.mjs"
+    "config:template": "node scripts/make-remoteconfig-template.mjs",
+    "build:pages": "tsc --noEmit && vite build --mode pages",
+    "check:pages": "node scripts/check-public-build.mjs"
   },
   "dependencies": {
     "firebase": "^13.4.0"

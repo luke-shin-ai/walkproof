@@ -119,16 +119,16 @@ function looksLikeMissingModel(message: string): boolean {
   return /not found|404|not supported|unsupported|invalid model|unknown model/i.test(message);
 }
 
-export async function classifyWithCloud(item: InspectionItem, payload: object): Promise<CloudClassifyResult> {
+export async function classifyWithCloud(item: InspectionItem, payload: object, model = CLOUD_MODEL): Promise<CloudClassifyResult> {
   const prompt = buildClassifyPrompt(item, item.clauses, JSON.stringify(payload));
   const started = performance.now();
   try {
-    const result = await withTimeout(buildCloudModel(CLOUD_MODEL).generateContent(prompt), 30_000, "the cloud model");
+    const result = await withTimeout(buildCloudModel(model).generateContent(prompt), 30_000, "the cloud model");
     return {
       raw: result.response.text(),
       latencyMs: Math.round(performance.now() - started),
       error: null,
-      model: CLOUD_MODEL,
+      model,
       modelFallback: false,
       source: String(result.response.inferenceSource ?? "unknown"),
     };
@@ -139,7 +139,7 @@ export async function classifyWithCloud(item: InspectionItem, payload: object): 
         raw: "",
         latencyMs: Math.round(performance.now() - started),
         error: message,
-        model: CLOUD_MODEL,
+        model,
         modelFallback: false,
         source: "unknown",
       };
