@@ -1,0 +1,50 @@
+WalkProof D5 measurement, 2026-11-23
+Kaggle Notebooks free CPU session, Chrome 158 on Linux under Xvfb, no GPU.
+
+The session printed the lines below. The session was stopped before its output
+file could be exported, so `results-kaggle-2026-11-23.json` is assembled from
+them by `scripts/assemble-d5.mjs`, which checks the arithmetic and refuses to
+write a file when a count disagrees. Nothing here was typed in by hand except
+the move from the session console to this file.
+
+generatedAt 2026-11-23T10:53:36.362Z
+environment {"capturedAt": "2026-11-23T10:34:11.859Z", "cores": 4, "deviceAvailability": "available", "deviceMemoryGB": 32, "languageModel": "function", "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36", "webgpu": "none"}
+cloudModel gemini-3.5-flash-lite
+metrics device,550181,13694,14487,0,0,0,0,40,100,8,10,22,20,0,0,0
+metrics hybrid,575612,14433,15606,20,0,0,7595,20,50,9,9,22,20,0,7,2
+# the holdout arm printed items, agreed, both agreement figures, held, amended, total, median, p90,
+# the verdicts, reviewExpected, wrongSettled and cloudCalls; the cloud fields and settledOnReview
+# below are counted from the item table because the holdout arm made no cloud call.
+metrics holdout,138700,13649,15229,0,0,0,0,10,100,2,1,7,7,1,0,0
+
+# agreement: agreed, agreed percent, agreement of the raw answer, its percent
+agreement device 38 95 29 73
+agreement hybrid 36 90 28 70
+agreement holdout 8 80 7 70
+
+# arm order of the three metrics lines above:
+#   name,totalMs,medianMs,p90Ms,cloudCalls,cloudErrors,cloudPhotoBytes,cloudRequestBytes,
+#   decidedWithoutCloud,offlineShare,pass,fail,review,reviewExpected,settledOnReview,refused,wrongSettled
+
+# per item: scenario:answerVerdict,recorded,evidence,gate:latencyMs
+#   answerVerdict and recorded: p pass, f fail, u unknown
+#   evidence: k kept, a amended, i held because the line is inconclusive, m held because the answer was unsupported
+#   gate: a accepted, r refused, n no cloud answer
+device S01:ppkn:14519|S02:ffkn:13142|S03:urin:13495|S04:frin:14098|S05:ppkn:13478|S06:ffkn:14034|S07:frin:14232|S08:urin:14946|S09:ppkn:13167|S10:ffkn:13587|S11:urin:14094|S12:prin:14487|S13:ppkn:13432|S14:ffkn:13708|S15:urin:13732|S16:urin:14162|S17:ppkn:13537|S18:ffkn:13559|S19:prin:13682|S20:urin:14705|S21:ppkn:13236|S22:ffkn:13591|S23:frin:14196|S24:frin:14275|S25:ppkn:12718|S26:ufan:13569|S27:urkn:13455|S28:frin:13871|S29:ppkn:13271|S30:ffkn:12982|S31:urin:14212|S32:urin:13734|S33:urkn:12727|S34:ffkn:13705|S35:urin:14308|S36:urin:13762|S37:urkn:12848|S38:ffan:13595|S39:urin:13499|S40:frin:14831
+hybrid S01:ppkn:15016|S02:ffkn:13255|S03:pria:15019|S04:frir:15216|S05:ppkn:13725|S06:ffkn:13922|S07:uria:15158|S08:uria:15708|S09:ppkn:13208|S10:ufan:13351|S11:uria:14732|S12:prir:15473|S13:ppkn:13727|S14:ffkn:13625|S15:uria:14870|S16:uria:17174|S17:ppkn:13452|S18:ppkn:13661|S19:prir:14619|S20:urir:15829|S21:ppkn:13028|S22:ffkn:12304|S23:prir:14971|S24:frir:15682|S25:ppkn:12680|S26:ufan:13537|S27:urka:14444|S28:uria:15164|S29:ppkn:13367|S30:ffan:13300|S31:urir:15606|S32:uria:15257|S33:ffkn:13085|S34:ffkn:13652|S35:uria:15529|S36:uria:15316|S37:urka:14421|S38:fraa:15499|S39:urin:13730|S40:frin:14300
+holdout H01:ppkn:16076|H02:urkn:15229|H03:urkn:13262|H04:urmn:13678|H05:ppkn:12846|H06:urin:13838|H07:prin:13850|H08:ffkn:12863|H09:urmn:13439|H10:urin:13619
+
+# why the gate refused, as the page printed them
+refused S04=the answer settles the item at fail while the line says the observation was not conclusive (cannot tell)
+refused S12=the answer settles the item at fail while the line says the observation was not conclusive (not sure)
+refused S19=the answer settles the item at pass while the line says the observation was not conclusive (no idea, whether)
+refused S20=the answer settles the item at fail while the line says the observation was not conclusive (not sure, whether)
+refused S23=the answer settles the item at fail while the line says the observation was not conclusive (cannot tell, wheth
+refused S24=the answer settles the item at fail while the line says the observation was not conclusive (not sure)
+refused S31=the answer settles the item at fail while the line says the observation was not conclusive (cannot tell, wheth
+
+# layout, from bench/kaggle_layout_check.py in the same session (device emulation for the phone)
+layout desktop-1440 overflow=0 console=0 width=1425
+layout phone-390 overflow=0 console=0 width=390
+layout bench-desktop-1440 overflow=0 console=0 width=1425
+layout bench-phone-390 overflow=0 console=0 width=390

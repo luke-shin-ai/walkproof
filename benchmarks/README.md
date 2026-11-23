@@ -5,26 +5,37 @@ https://luke-shin-ai.github.io/walkproof/bench/ .
 
 | file | host | what it covers |
 |---|---|---|
-| `results-kaggle-2026-11-23.json` | Kaggle Notebooks free CPU session (4 cores, 30 GiB, Chrome on Linux) | the forty observations, all three paths |
+| `raw-d5-2026-11-23.txt` | Kaggle Notebooks free CPU session (4 cores, 32 GiB, Chrome 158 on Linux) | the lines the D5 session printed: arm metrics, the per item table, the gate refusals, the layout checks |
+| `results-kaggle-2026-11-23.json` | assembled from the file above by `scripts/assemble-d5.mjs` | the D5 run: forty observations on the device and through the hybrid, plus ten held-out notes on the device |
 
-## The run of 2026-11-23
+`scripts/assemble-d5.mjs` recomputes every count from the per item table and
+refuses to write the JSON when one disagrees with what the session printed. The
+session was stopped before its output file could be exported, so the JSON is
+assembled rather than copied; every number in it comes from the run.
 
-| metric | on-device | hybrid | cloud only |
+## The D5 run of 2026-11-23
+
+| metric | on-device | hybrid | ten held-out notes |
 |---|---|---|---|
-| items | 40 | 40 | 6 |
-| total | 592.9 s | 605.6 s | 17.9 s |
-| median | 14,950 ms | 15,182 ms | 3,072 ms |
-| p90 | 15,395 ms | 16,729 ms | 3,637 ms |
-| cloud calls | 0 | 11 | 6 |
-| photo bytes to cloud | 0 | 0 | 535,758 |
-| request bytes to cloud | 0 | 4,167 | 718,749 |
-| settled without cloud | 100% | 73% | 0% |
-| agreement with the human key | 60% | 63% | 6 of 6 |
-| gate refusals | n/a | 0 | 0 |
+| items | 40 | 40 | 10 |
+| agreement with the human key | 38 (95%) | 36 (90%) | 8 (80%) |
+| agreement of the model answer alone | 29 (73%) | 28 (70%) | 7 (70%) |
+| held by the line | 19 | 19 | 5 |
+| amended from the line | 2 | 4 | 0 |
+| review items settled anyway | 0 of 20 | 0 of 20 | 1 of 7 |
+| total | 550.2 s | 575.6 s | 138.7 s |
+| median | 13,694 ms | 14,433 ms | 13,649 ms |
+| p90 | 14,487 ms | 15,606 ms | 15,229 ms |
+| cloud calls | 0 | 20 | 0 |
+| photo bytes to cloud | 0 | 0 | 0 |
+| request bytes to cloud | 0 | 7,595 | 0 |
+| gate refusals | n/a | 7 | n/a |
 
-The cloud arm is six items because the free tier allows 20 requests per model
-per day, and `gemini-4-hydrogen` had already spent its day. The hybrid and the
-on-device arm ran with `gemini-3.5-flash-lite`, the model the app falls back to.
+The run before this one (D4, same day, same session shape, no check against the
+inspector's line) agreed on 24 of 40 on the device, settled 12 of the 20 open
+items, and had no gate refusal at all. `tests/d5-regression.test.ts` replays
+those answers through the shipped decision: 24 of 40 as they came back, 40 of 40
+after the check. That is a ceiling for the set the rules were written from.
 
 ## What is measured
 
@@ -35,13 +46,15 @@ carries the state and the photo is one of the ten licensed fixtures, because
 that is the product: the photo is evidence kept on the device and the line is
 what a model reads (`../docs/vision-gate.md`).
 
-Three paths see the same forty observations:
+The ten held-out notes (`HELDOUT_SCENARIOS` in `../src/bench/scenarios.ts`) ask
+for the same judgements in other words. They were written after the rules and
+are never counted with the forty.
 
 | path | code | what it does |
 |---|---|---|
-| on-device | `src/ai/hybrid.ts` (`ONLY_ON_DEVICE`), `src/rules/judge.ts` | Gemini Nano structures the line, the rule pack decides, the photo never leaves the device |
+| on-device | `src/ai/hybrid.ts` (`ONLY_ON_DEVICE`), `src/rules/evidence.ts`, `src/rules/judge.ts` | Gemini Nano structures the line, the answer is checked against the line, the rule pack decides, the photo never leaves the device |
 | hybrid | `src/pipeline.ts` | the shipped flow: on-device first, cloud only for an `unknown` item, inside the daily budget, every answer checked by `src/rules/verify.ts` |
-| cloud only | baseline in `src/bench/harness.ts` | every item goes to the cloud with its photo and its line, and the same verification gate runs on the answer |
+| cloud only | baseline in `src/bench/harness.ts` | every item goes to the cloud with its photo and its line; measured on six items in D4 because of the free tier |
 
 ## How to reproduce
 
@@ -52,7 +65,8 @@ Three paths see the same forty observations:
    free on the profile volume) and a gesture to start the download.
 3. `bench/kaggle_runner.py` does the same thing from a free Kaggle CPU session,
    including the 1440 px and 390 px layout checks, and prints the result as a
-   gzipped base64 dump.
+   table. Add `set=heldout` to the page URL for the ten held-out notes, or run
+   `bench/kaggle_layout_check.py` for the layout checks alone.
 
 A run needs a key. The public build carries none: the config comes from the URL
 fragment at runtime and is never written down.

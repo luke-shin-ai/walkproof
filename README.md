@@ -18,29 +18,44 @@ clause id and a remedy.
 ## Measured on 2026-11-23
 
 Forty observations (ten checklist items, four each: pass, fail, borderline,
-trap) were pushed through three paths on a free 4 core CPU session in Chrome
-158, with Gemini Nano running on the CPU. Raw result:
-`benchmarks/results-kaggle-2026-11-23.json`.
+trap) were pushed through the on-device path and the shipped hybrid on a free 4
+core CPU session in Chrome 158, with Gemini Nano running on the CPU. Then ten
+more notes, written separately and in other words, went through the device path.
+Raw result: `benchmarks/results-kaggle-2026-11-23.json`; the session's own table
+is kept in `benchmarks/raw-d5-2026-11-23.txt`.
 
-| | on-device | hybrid | cloud only (6 items) |
+| | on-device | hybrid | ten held-out notes |
 |---|---|---|---|
-| total time | 592.9 s | 605.6 s | 17.9 s |
-| median latency | 14,950 ms | 15,182 ms | 3,072 ms |
-| cloud calls | 0 | 11 | 6 |
-| photo bytes to the cloud | 0 | 0 | 535,758 |
-| settled without the cloud | 100% | 73% | 0% |
-| verdicts pass / fail / review | 16 / 12 / 12 | 14 / 17 / 9 | 2 / 2 / 2 |
+| items | 40 | 40 | 10 |
+| agreement with the human key | 38 (95%) | 36 (90%) | 8 (80%) |
+| agreement of the model answer alone | 29 (73%) | 28 (70%) | 7 (70%) |
+| items the line left open and the device held | 19 | 19 | 5 |
+| items the device amended from the line | 2 | 4 | 0 |
+| review items that were settled anyway | 0 of 20 | 0 of 20 | 1 of 7 |
+| total time | 550.2 s | 575.6 s | 138.7 s |
+| median latency | 13,694 ms | 14,433 ms | 13,649 ms |
+| cloud calls | 0 | 20 | 0 |
+| photo bytes to the cloud | 0 | 0 | 0 |
+| request bytes to the cloud | 0 | 7,595 | 0 |
+| cloud answers the gate refused | n/a | 7 | n/a |
 
-The hybrid sent eleven typed summaries (4,167 bytes in total) where the cloud
-only baseline sent a photo and the raw line every time. A forty item cloud only
-walk needs forty calls, which the free tier (20 requests per model per day) does
-not allow in one day. The on-device model read the line differently from the
-human answer key in 16 of 40 cases, which is the work D5 has to do; the numbers
-above are what happened, not a target.
+The same answers scored 24 of 40 two days earlier, before the device read the
+inspector's line: `tests/d5-regression.test.ts` replays those answers through
+the shipped decision and gets 40 of 40, which is a ceiling for that set and not
+a claim about the product. The two misses in this run are a pass recorded as
+review twice (S33, S37), both on the cautious side. The ten held-out notes show
+where the word list stops: a hedge phrased without one of its words still gets
+settled, and one failure written as "cover is off the board" is read as nothing
+wrong.
+
+The earlier run of the same day also measured a cloud only baseline of six items
+(6 of 6, 535,758 photo bytes). It is not repeated here: the free tier allows 20
+requests per model per day and this run spent them on the hybrid, which is the
+path the product ships.
 
 ## Status
 
-D1 to D3 of the build plan are in place (2026-11-23).
+D1 to D5 of the build plan are in place (2026-11-23).
 
 - Field capture with photo, one line note and an IndexedDB queue.
 - Note structuring on the device, with the built-in rule parser as the fallback
@@ -48,8 +63,13 @@ D1 to D3 of the build plan are in place (2026-11-23).
 - Deterministic verdicts (`pass`, `fail`, `unknown`) and fix deadlines from the
   rule pack.
 - Cloud escalation for `unknown` items only, behind a daily budget meter.
+- The device reads the inspector's line itself and checks every answer against
+  it: an absence claim the line does not make, a defect with no severity, or a
+  verdict on a line that says the observer could not tell is amended or left
+  open (`src/rules/evidence.ts`).
 - On-device verification of every cloud answer, with `rejected_unsupported`
-  for anything that fails a check.
+  for anything that fails a check, including an answer that turns a hedge into
+  a verdict.
 - Ledger with a source badge per record and CSV export.
 - Printable inspection record with photos, clauses, deadlines and signature
   lines.
@@ -77,6 +97,7 @@ reduced to the structured finding plus a redacted line (`src/rules/structure.ts`
 |---|---|---|
 | G6 capture | `src/storage/queue.ts` | the photo and note are written to IndexedDB before any model work, so a closed tab does not lose the record |
 | G4 structure | `src/rules/structure.ts`, `src/ai/hybrid.ts` | the on-device model or the built-in parser turns the note into one shared finding schema |
+| check the answer | `src/rules/evidence.ts` | reads the line and narrows what an answer may claim: the line's own hedge, absence the line does not state, a defect with no severity |
 | judge | `src/rules/judge.ts` | the only code that produces a verdict, with the deadline from the item |
 | G2 budget | `src/budget.ts` | a call is made only while today has room; a full meter leaves the item queued |
 | cloud | `src/ai/hybrid.ts` | `ONLY_IN_CLOUD` with `gemini-4-hydrogen` and `responseSchema`; a missing model falls back once to `gemini-3.5-flash-lite`, the ledger shows the model that answered, and a call that has not answered in 30 s is recorded as a failed check so the walk can continue |
@@ -96,7 +117,7 @@ person".
 npm install
 cp .env.example .env      # Firebase web app values, or leave empty for local only
 npm run dev
-npm test                  # 64 tests
+npm test                  # 87 tests
 npm run build             # type check, then the Vite build
 npm run check:ai-tells    # fails on machine looking punctuation and on secrets
 
@@ -152,11 +173,14 @@ app behaves exactly as it does with the remote pack.
 4. it contradicts the on-device finding about whether the item was present,
 5. the rule pack, run on the cloud's own finding, reaches a different verdict
    than the one the cloud suggested,
-6. it would overturn a verdict the device had already settled.
+6. it would overturn a verdict the device had already settled,
+7. it settles an item at pass or fail while the line says the observation was
+   not conclusive.
 
-Rejections are counted and shown. On the sample walkthrough the expected number
-of rejected answers is 0 out of 2 calls; the number is reported per walk rather
-than asserted in advance.
+Rejections are counted and shown. In the measured run the gate refused 7 of the
+20 cloud answers, every one of them for turning a hedge into a verdict; two days
+earlier, with the same model and no check against the line, it refused none.
+The sample walkthrough reports the number per walk rather than asserting it.
 
 ## What is measured
 
@@ -184,6 +208,15 @@ confirm what it shows. Numbers and the reproduction notebook are in
 - The on-device model needs a desktop Chrome with the hardware for it. On a
   tablet without it, the same records are produced by the rule parser and the
   record says which layer did the work.
+- The cross check reads words, not meaning. It catches the hedges an inspector
+  actually writes (not sure, cannot tell, unclear, maybe, no idea) and misses a
+  guess phrased another way: in the ten held-out notes it held 5 of the 7 open
+  cases. A model side hedge flag is the next step, not more words in the list.
+- A missed defect is a different failure from an over-claimed one. In the hybrid
+  run the model read "two pallets of stock left in front of the exit door" as
+  nothing wrong and the record said pass. The cross check cannot arbitrate a
+  disagreement about the defect itself, because the word list is too crude to
+  tell "painted last month" from "painted over".
 - A cloud answer can be wrong. That is why the gate exists, why rejections are
   shown, and why an unresolved item is signed off by a person.
 - The daily budget is per device, not per building, because there is no server
@@ -194,15 +227,16 @@ confirm what it shows. Numbers and the reproduction notebook are in
 ```
 src/ai/          AI Logic models, shared schema, prompt text
 src/config/      Firebase web config, Remote Config pack loader
-src/rules/       rule pack, deterministic judge, note parser, cloud gate
+src/rules/       rule pack, deterministic judge, note parser, answer check, cloud gate
 src/storage/     IndexedDB capture queue and record store
 src/budget.ts    daily cloud budget meter
 src/ledger.ts    ledger rows, CSV, summary, printable report model
 src/pipeline.ts  one item through the boundary, with injected model calls
 src/demo.ts      the ten step sample walkthrough
 src/main.ts      the screen
+benchmarks/      the measured runs and the session table they came from
 fixtures/        ten photos with licences and a human answer key
-scripts/         repository checks and the Remote Config template
+scripts/         repository checks, the Remote Config template, the result assembler
 probe/           the AI Logic and vision gate probes
 docs/            the vision gate measurement
 ```
