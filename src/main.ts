@@ -454,7 +454,7 @@ function actionsCard(): string {
       <button class="primary" id="run-demo" ${state.busyAll ? "disabled" : ""}>${state.busyAll ? "Running the sample walkthrough..." : "Load the sample walkthrough"}</button>
       <button id="prepare-device" ${state.device === "ready" ? "disabled" : ""}>${state.device === "ready" ? "On-device model ready" : "Prepare on-device model"}</button>
       ${
-        queued
+        state.firebaseReady && queued
           ? `<button id="retry-cloud" ${state.busyAll ? "disabled" : ""}>Retry ${queued} waiting ${queued === 1 ? "item" : "items"} in the cloud</button>`
           : ""
       }
