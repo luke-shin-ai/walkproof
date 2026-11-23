@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b5d4b'/%3E%3Ctext x='16' y='23' font-family='Helvetica,Arial' font-size='19' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WalkProof / 40 item measurement</title>
+    <meta
+      name="description"
+      content="Measured comparison of the on-device path, the cloud only baseline and the WalkProof hybrid across forty building safety observations."
+    />
+    <script type="module" crossorigin src="../assets/bench-Gb897nGL.js"></script>
+    <link rel="modulepreload" crossorigin href="../assets/pipeline-DWlSCAQL.js">
+    <link rel="stylesheet" crossorigin href="../assets/bench-D1ZElV7y.css">
+  </head>
+  <body>
+    <header class="head">
+      <a class="back" href="../">WalkProof</a>
+      <div>
+        <h1>Forty observations, three paths</h1>
+        <p class="lede">
+          The same forty notes and photos go through the on-device path, a cloud only baseline and the shipped hybrid. A
+          run needs the Firebase config in the URL fragment; the recorded run below needs nothing and is what the
+          README quotes.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section class="card" id="run-card">
+        <div class="row">
+          <button id="run" class="primary">Run the measurement</button>
+          <label class="check"><input type="checkbox" id="opt-device" checked /> on-device</label>
+          <label class="check"><input type="checkbox" id="opt-hybrid" checked /> hybrid</label>
+          <label class="check"><input type="checkbox" id="opt-cloud" checked /> cloud only</label>
+          <label class="slim">cloud model <input type="text" id="opt-model" value="gemini-4-hydrogen" /></label>
+          <label class="slim">cloud only items <input type="number" id="opt-count" value="10" min="1" max="40" /></label>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite">Checking this browser.</p>
+        <div class="probe" id="probe"></div>
+      </section>
+
+      <section id="live"></section>
+
+      <section class="card" id="recorded-card">
+        <h2>Recorded run</h2>
+        <p class="small" id="recorded-note">Loading the recorded run.</p>
+        <div id="recorded"></div>
+      </section>
+    </main>
+
+  </body>
+</html>
