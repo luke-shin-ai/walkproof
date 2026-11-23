@@ -39,6 +39,11 @@ GAP_MS = int(globals().get("GAP_MS", 2500))
 RUN_TIMEOUT = int(globals().get("RUN_TIMEOUT", 3600))
 # The ten notes that are not part of the forty, walked on the device after them.
 HOLDOUT = int(globals().get("HOLDOUT", 1))
+# all: layout, forty item arms, held out arm. heldout: only the ten notes, for a
+# quick check that the on-device model answers in this session.
+MODE = globals().get("MODE", "all")
+# How long a single item may stay on the same progress line before the run gives up.
+STALL_S = int(globals().get("STALL_S", 420))
 
 SITE = BASE.replace("bench/", "")
 
@@ -165,9 +170,74 @@ def run_arms(browser, device, hybrid, cloud, count, set_name="main"):
     return result
 
 
+def run_watched(browser, device, hybrid, cloud, count, set_name="main"):
+    """run_arms, but a page that stops reporting is reported instead of waited on."""
+    import threading
+
+    box = {}
+
+    def work():
+        try:
+            box["result"] = run_arms(browser, device, hybrid, cloud, count, set_name)
+        except Exception as error:  # noqa: BLE001
+            box["error"] = error
+
+    thread = threading.Thread(target=work, daemon=True)
+    thread.start()
+    thread.join(timeout=RUN_TIMEOUT)
+    if thread.is_alive():
+        print("STALLED: the page stopped reporting and the run was abandoned", flush=True)
+        raise RuntimeError("stalled")
+    if "error" in box:
+        raise box["error"]
+    return box["result"]
+
+
 def main():
     install()
     start_display()
+
+    if MODE == "heldout":
+        browser = new_driver(1440, 900)
+        try:
+            held = run_arms(browser, device=True, hybrid=False, cloud=False, count=1, set_name="heldout")
+            metrics = dict(held["arms"][0])
+            results = {
+                "generatedAt": held.get("generatedAt"),
+                "cloudModel": MODEL,
+                "environment": held.get("environment"),
+                "host": "Kaggle Notebooks free CPU session, Chrome on Linux under Xvfb",
+                "layout": {},
+                "arms": [],
+                "items": {},
+                "holdout": {"metrics": metrics, "items": held["items"]["device"]},
+            }
+            with open("/kaggle/working/walkproof-holdout.json", "w") as handle:
+                json.dump(results, handle, indent=1)
+            print("HOLDOUT", json.dumps(metrics, ensure_ascii=False), flush=True)
+            for row in results["holdout"]["items"]:
+                print(
+                    "ITEM "
+                    + json.dumps(
+                        {
+                            "arm": "holdout",
+                            "id": row.get("scenario"),
+                            "expected": row.get("expected"),
+                            "answer": row.get("answerVerdict"),
+                            "recorded": row.get("recorded"),
+                            "check": row.get("evidence"),
+                            "ms": row.get("latencyMs"),
+                        },
+                        ensure_ascii=False,
+                    ),
+                    flush=True,
+                )
+        finally:
+            try:
+                browser.quit()
+            except Exception:
+                pass
+        return
 
     layout = {}
     browser = new_driver(1440, 900)
