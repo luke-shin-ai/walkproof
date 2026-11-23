@@ -63,7 +63,7 @@ import{$ as e,A as t,B as n,C as r,D as i,E as a,F as o,G as s,H as c,J as l,K a
     <div class="card actions">
       <button class="primary" id="run-demo" ${K.busyAll?`disabled`:``}>${K.busyAll?`Running the sample walkthrough...`:`Load the sample walkthrough`}</button>
       <button id="prepare-device" ${K.device===`ready`?`disabled`:``}>${K.device===`ready`?`On-device model ready`:`Prepare on-device model`}</button>
-      ${t?`<button id="retry-cloud" ${K.busyAll?`disabled`:``}>Retry ${t} waiting ${t===1?`item`:`items`} in the cloud</button>`:``}
+      ${K.firebaseReady&&t?`<button id="retry-cloud" ${K.busyAll?`disabled`:``}>Retry ${t} waiting ${t===1?`item`:`items`} in the cloud</button>`:``}
       <button id="export-csv" ${e.checked?``:`disabled`}>Export ledger CSV</button>
       <button id="print-record" ${e.checked?``:`disabled`}>Print inspection record</button>
       <button class="quiet" id="clear-walk" ${e.checked?``:`disabled`}>Clear this walkthrough</button>
