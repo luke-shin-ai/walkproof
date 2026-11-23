@@ -193,7 +193,9 @@ build, which takes the Firebase web config at runtime from the URL fragment
 Press "Load the sample walkthrough". Ten steps load a licensed photo and a line
 of inspector text each, then run the real pipeline. On a browser with the
 on-device model the note is structured there; without it the rule parser does
-the work and the record says so. One line is deliberately unclear (`sp-10`, "not
+the work and the record says so. A browser that has the model but has not
+downloaded it yet shows `device model: press prepare` in the header, and one
+press of "Prepare on-device model" fetches it once for every later visit. One line is deliberately unclear (`sp-10`, "not
 sure whether that is allowed"), so it goes to a person without a cloud call and
 without spending budget. One line is decisive but leaves the rule pack below its
 fail threshold (`sd-08`, a thin coat of paint on a detector), so a configured

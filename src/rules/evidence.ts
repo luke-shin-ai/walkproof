@@ -71,6 +71,10 @@ function nameOf(defect: DefectType): string {
  *    reading the same line cannot see more than the person did, so this item is
  *    not sent to the cloud either.
  *
+ * The pipeline reads `hold`: when it is not none, the item is recorded as it
+ * stands and the cloud is not asked, because the line itself is why the item is
+ * open and the day's budget is kept for items the rule pack alone leaves open.
+ *
  * None of these rules invents a defect: they can only narrow what may be
  * recorded, and the same note always gives the same answer.
  */
