@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WalkProof AI Logic probe</title>
+<style>
+  body { font: 14px/1.5 ui-monospace, monospace; margin: 24px; }
+  pre { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>WalkProof AI Logic probe</h1>
+<p>Reads the web app config from the URL fragment. Nothing is stored.</p>
+<pre id="out">running</pre>
+<script type="module">
+const SDK = "https://www.gstatic.com/firebasejs/13.4.0";
+const out = document.getElementById("out");
+const log = [];
+const note = (key, value) => {
+  log.push({ key, value });
+  out.textContent = JSON.stringify(log, null, 2);
+  window.__probe = log;
+};
+
+const params = new URLSearchParams(location.hash.slice(1));
+const get = (name) => params.get(name) || "";
+
+try {
+  const { initializeApp } = await import(`${SDK}/firebase-app.js`);
+  const { initializeAppCheck, ReCaptchaEnterpriseProvider } = await import(`${SDK}/firebase-app-check.js`);
+  const { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } = await import(`${SDK}/firebase-ai.js`);
+
+  note("userAgent", navigator.userAgent);
+
+  const debugToken = get("debugToken");
+  if (debugToken) self.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+
+  const app = initializeApp({
+    apiKey: get("apiKey"),
+    authDomain: get("authDomain"),
+    projectId: get("projectId"),
+    storageBucket: get("storageBucket"),
+    messagingSenderId: get("messagingSenderId"),
+    appId: get("appId"),
+  });
+  note("firebase.init", `ok projectId=${get("projectId")}`);
+
+  try {
+    const appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(get("siteKey") || "placeholder-site-key"),
+      isTokenAutoRefreshEnabled: true,
+    });
+    const result = await appCheck.getToken(false);
+    note("appcheck.getToken", `ok tokenLen=${(result.token || "").length}`);
+  } catch (error) {
+    note("appcheck.error", `${error.name}: ${error.message}`);
+  }
+
+  const ai = getAI(app, { backend: new GoogleAIBackend() });
+
+  try {
+    const cloud = getGenerativeModel(ai, {
+      mode: InferenceMode.ONLY_IN_CLOUD,
+      inCloudParams: { model: get("cloudModel") || "gemini-3.5-flash-lite" },
+    });
+    const started = performance.now();
+    const answer = await cloud.generateContent("Reply with one word: ready");
+    note("cloud.text", answer.response.text());
+    note("cloud.inferenceSource", String(answer.response.inferenceSource));
+    note("cloud.ms", Math.round(performance.now() - started));
+  } catch (error) {
+    note("cloud.error", `${error.name}: ${error.message}`);
+  }
+
+  try {
+    const device = getGenerativeModel(ai, {
+      mode: InferenceMode.ONLY_ON_DEVICE,
+      onDeviceParams: {
+        createOptions: {
+          expectedInputs: [{ type: "text", languages: ["en"] }],
+          expectedOutputs: [{ type: "text", languages: ["en"] }],
+        },
+      },
+    });
+    const started = performance.now();
+    const answer = await device.generateContent("Reply with one word: ready");
+    note("device.text", answer.response.text());
+    note("device.inferenceSource", String(answer.response.inferenceSource));
+    note("device.ms", Math.round(performance.now() - started));
+  } catch (error) {
+    note("device.error", `${error.name}: ${error.message}`);
+  }
+
+  const api = globalThis.LanguageModel;
+  if (api && typeof api.availability === "function") {
+    try {
+      note("languageModel.availability", String(await api.availability()));
+    } catch (error) {
+      note("languageModel.error", `${error.name}: ${error.message}`);
+    }
+  } else {
+    note("languageModel.availability", "not exposed");
+  }
+
+  note("done", "finished");
+} catch (error) {
+  note("fatal", `${error.name}: ${error.message}`);
+}
+</script>
+</body>
+</html>
