@@ -40,13 +40,20 @@ def browser(width, height):
     return driver
 
 
-def check(driver, url, tag, width, height, mobile, shot):
+def check(driver, url, tag, width, height, mobile, shot, demo=False):
     driver.execute_cdp_cmd(
         "Emulation.setDeviceMetricsOverride",
         {"width": width, "height": height, "deviceScaleFactor": 1 if not mobile else 2, "mobile": mobile},
     )
     driver.get(url)
     time.sleep(6)
+    if demo:
+        driver.find_element("id", "run-demo").click()
+        for _ in range(30):
+            time.sleep(1)
+            if driver.execute_script("return document.querySelectorAll('.record, .result').length") >= 10:
+                break
+        time.sleep(2)
     report = driver.execute_script(
         """
         const d = document.documentElement;
@@ -81,12 +88,16 @@ def check(driver, url, tag, width, height, mobile, shot):
 def main():
     display()
     driver = browser(1440, 900)
+    severe = 0
     try:
-        check(driver, SITE, "desktop-1440", 1440, 900, False, "/kaggle/working/walkproof-pages-1440.png")
-        check(driver, SITE, "phone-390", 390, 844, True, "/kaggle/working/walkproof-pages-390.png")
-        check(driver, BASE, "bench-desktop-1440", 1440, 900, False, "/kaggle/working/walkproof-bench-1440.png")
-        check(driver, BASE, "bench-phone-390", 390, 844, True, "/kaggle/working/walkproof-bench-390.png")
-        print("TOTAL_SEVERE", len(errors), flush=True)
+        reports = [
+            check(driver, SITE, "desktop-1440", 1440, 900, False, "/kaggle/working/walkproof-pages-1440.png", demo=True),
+            check(driver, SITE, "phone-390", 390, 844, True, "/kaggle/working/walkproof-pages-390.png"),
+            check(driver, BASE, "bench-desktop-1440", 1440, 900, False, "/kaggle/working/walkproof-bench-1440.png"),
+            check(driver, BASE, "bench-phone-390", 390, 844, True, "/kaggle/working/walkproof-bench-390.png"),
+        ]
+        severe = sum(report["consoleSevere"] for report in reports)
+        print("TOTAL_SEVERE", severe, flush=True)
     finally:
         driver.quit()
 
