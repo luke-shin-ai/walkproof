@@ -1,5 +1,5 @@
 {
-  "annotated_by": "human review before the model ran, 2026-11-23",
+  "annotated_by": "human review before the model ran, 2026-11-23; five more photos annotated the same way when the sample walkthrough was built",
   "items": [
     {
       "id": "extinguisher",
@@ -56,7 +56,7 @@
     {
       "id": "extinguisher-cart",
       "file": "extinguisher-cart.jpg",
-      "prompt_item": "Fire extinguisher in its cabinet",
+      "prompt_item": "Spare extinguisher kept indoors in its marked place",
       "expects": "target_visible",
       "expected": {
         "target_present": true,
@@ -65,6 +65,71 @@
         "obscured": false
       },
       "note": "Extinguisher present but on an outdoor cart, not in the designated wall cabinet."
+    },
+    {
+      "id": "blocked-exit",
+      "file": "blocked-exit.jpg",
+      "prompt_item": "Escape route clear of stored goods",
+      "expects": "no_defect",
+      "expected": {
+        "target_present": true,
+        "defect_type": "blockage",
+        "severity": "medium",
+        "obscured": false
+      },
+      "note": "Pallets of goods stacked in front of a fire exit door under a lit sign, with a trolley beside them."
+    },
+    {
+      "id": "hose-reel",
+      "file": "hose-reel.jpg",
+      "prompt_item": "Hose reel in place, signed and free to turn",
+      "expects": "target_visible",
+      "expected": {
+        "target_present": true,
+        "defect_type": "none",
+        "severity": "none",
+        "obscured": false
+      },
+      "note": "Red hose reel on a block wall with its sign, valve and riser, nothing wrong."
+    },
+    {
+      "id": "smoke-detector",
+      "file": "smoke-detector.jpg",
+      "prompt_item": "Smoke detector unobstructed and unpainted",
+      "expects": "target_clear",
+      "expected": {
+        "target_present": true,
+        "defect_type": "painted_over",
+        "severity": "medium",
+        "obscured": false
+      },
+      "note": "Ceiling detector close up, paint on the casing and the grille partly filled."
+    },
+    {
+      "id": "sprinkler",
+      "file": "sprinkler.jpg",
+      "prompt_item": "Sprinkler head free of paint and storage",
+      "expects": "target_clear",
+      "expected": {
+        "target_present": true,
+        "defect_type": "painted_over",
+        "severity": "medium",
+        "obscured": false
+      },
+      "note": "Sprinkler head in a protective cage with a red bulb, paint on the frame and deflector."
+    },
+    {
+      "id": "fire-door",
+      "file": "fire-door.jpg",
+      "prompt_item": "Fire shutter closes fully with its track clear",
+      "expects": "no_defect",
+      "expected": {
+        "target_present": true,
+        "defect_type": "blockage",
+        "severity": "medium",
+        "obscured": false
+      },
+      "note": "Sliding fire door closed, with a step ladder and a spare extinguisher left against the frame."
     }
   ]
 }

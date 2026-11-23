@@ -1,7 +1,7 @@
 {
   "name": "walkproof",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Building safety walkthrough that keeps photos and verdicts on the device.",
   "license": "Apache-2.0",
@@ -9,13 +9,18 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check:ai-tells": "node scripts/check-ai-tells.mjs"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:ai-tells": "node scripts/check-ai-tells.mjs",
+    "verify": "npm run config:template && npm run test && npm run build && npm run check:ai-tells",
+    "config:template": "node scripts/make-remoteconfig-template.mjs"
   },
   "dependencies": {
     "firebase": "^13.4.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
-    "vite": "^8.3.8"
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
   }
 }

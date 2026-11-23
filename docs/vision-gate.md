@@ -42,7 +42,7 @@ Photo judgement is not part of the on-device job. The device does three things:
 it structures the one line note (text path, measured at 3.7 to 5.5 s in the same
 environment earlier that day), it keeps the photo, and it asks the inspector to
 confirm what the photo shows. The verdict comes from the rule pack in
-`src/rules/pack.ts`.
+`src/rules/judge.ts`, using the checklist in `src/rules/pack.ts`.
 
 Consequences for the demo: no scene claims a machine verdict from a photo, the
 three minute video shows the inspector confirming a photo, and the README states
