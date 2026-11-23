@@ -1,6 +1,6 @@
 # Measured runs
 
-Two runs are recorded here, both made on 2026-11-23 with the published build at
+The run recorded here was made on 2026-11-23 with the published build at
 https://luke-shin-ai.github.io/walkproof/bench/ .
 
 | file | host | what it covers |
