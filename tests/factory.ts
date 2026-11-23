@@ -25,6 +25,9 @@ export function cloudCheck(overrides: Partial<CloudCheck> = {}): CloudCheck {
     error: null,
     budgetUsed: 1,
     budgetLimit: 20,
+    askedBecause: "pack_open",
+    deviceVerdict: "unknown",
+    settled: false,
     ...overrides,
   };
 }

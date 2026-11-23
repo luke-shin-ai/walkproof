@@ -15,7 +15,7 @@ import {
   type BenchPhoto,
   type CloudPhotoResult,
 } from "../src/bench/harness";
-import { BENCH_SCENARIOS, HELDOUT_SCENARIOS } from "../src/bench/scenarios";
+import { BENCH_SCENARIOS, HELDOUT_SCENARIOS, OPEN_SCENARIOS } from "../src/bench/scenarios";
 
 import extinguisher from "../fixtures/extinguisher.jpg";
 import exitSign from "../fixtures/exit-sign.jpg";
@@ -48,8 +48,8 @@ interface Options {
   model: string;
   cloudOnly: number;
   gapMs: number;
-  /** `heldout` walks the ten notes that are not part of the forty. */
-  set: "main" | "heldout";
+  /** `heldout` walks the ten notes kept apart from the forty; `open` walks the ten written for the cloud path. */
+  set: "main" | "heldout" | "open";
 }
 
 function readOptions(): Options {
@@ -62,7 +62,7 @@ function readOptions(): Options {
     model: params.get("model") ?? CLOUD_MODEL,
     cloudOnly: Math.max(1, Math.min(40, Number(params.get("cloudOnly") ?? 10))),
     gapMs: Math.max(0, Number(params.get("gap") ?? 2000)),
-    set: params.get("set") === "heldout" ? "heldout" : "main",
+    set: params.get("set") === "heldout" ? "heldout" : params.get("set") === "open" ? "open" : "main",
   };
 }
 
@@ -257,6 +257,7 @@ function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
       ${metricRow("held by the line", String(metrics.heldByNote))}
       ${metricRow("amended from the line", String(metrics.amendedByNote))}
       ${metricRow("refusals", `${metrics.refused} of ${metrics.cloudCalls}`)}
+      ${metricRow("settled by the cloud", `${metrics.settledByCloudCorrect ?? 0} right / ${metrics.settledByCloud ?? 0} settled`)}
       ${metricRow("review items", `${metrics.refusedOnReview} refused / ${metrics.settledOnReview} settled`)}
       ${metricRow("capture rate", metrics.captureRate === null ? "n/a" : `${metrics.captureRate}%`)}
     </div>
@@ -340,15 +341,16 @@ async function run(options: Options): Promise<void> {
     const arms: ArmMetrics[] = [];
     const items: Record<string, ArmResult["items"]> = {};
 
+    const walk = options.set === "heldout" ? HELDOUT_SCENARIOS : options.set === "open" ? OPEN_SCENARIOS : BENCH_SCENARIOS;
+
     if (options.device) {
-      const deviceSet = options.set === "heldout" ? HELDOUT_SCENARIOS : BENCH_SCENARIOS;
-      const result = await runDeviceArm(deps, deviceSet);
+      const result = await runDeviceArm(deps, walk);
       arms.push(result.metrics);
       items.device = result.items;
       renderResults({ arms, items, environment: env, cloudModel: options.model });
     }
     if (options.hybrid) {
-      const result = await runHybridArm(deps);
+      const result = await runHybridArm(deps, walk);
       arms.push(result.metrics);
       items.hybrid = result.items;
       renderResults({ arms, items, environment: env, cloudModel: options.model });

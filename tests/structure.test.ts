@@ -56,14 +56,28 @@ describe("what leaves the device", () => {
   it("builds a typed payload with clause ids and no image", () => {
     const item = findItem(DEFAULT_PACK, "sd-08")!;
     const finding = structureNote(item, "Painted over during the refit, no idea whether it still works.")!;
-    const payload = buildCloudPayload(item, finding, DEFAULT_PACK);
+    const payload = buildCloudPayload(item, DEFAULT_PACK, { draft: finding, draftTrusted: true, reason: "pack_open" });
     const parsed = JSON.parse(payload.json) as Record<string, unknown>;
     expect(parsed.allowedClauseIds).toEqual(["SD-08"]);
     expect(parsed.photo).toBe("kept on the device");
     expect(payload.json).not.toContain("data:image");
     expect(payload.json).not.toContain("base64");
     expect(payload.bytes).toBeGreaterThan(50);
-    expect((parsed.finding as Record<string, unknown>).note).toBeUndefined();
+    expect((parsed.deviceDraft as Record<string, unknown>).note).toBeUndefined();
+    expect((parsed.deviceDraft as Record<string, unknown>).trusted).toBe(true);
     expect(String(parsed.note).length).toBeGreaterThan(10);
+  });
+
+  it("marks a draft the line did not support and says why the item is going out", () => {
+    const item = findItem(DEFAULT_PACK, "sd-08")!;
+    const finding = structureNote(item, "Detector clear, grille open, nothing on it.")!;
+    const payload = buildCloudPayload(item, DEFAULT_PACK, {
+      draft: finding,
+      draftTrusted: false,
+      reason: "untrusted_reading",
+    });
+    const parsed = JSON.parse(payload.json) as Record<string, unknown>;
+    expect((parsed.deviceDraft as Record<string, unknown>).trusted).toBe(false);
+    expect(String(parsed.openBecause)).toContain("did not survive");
   });
 });

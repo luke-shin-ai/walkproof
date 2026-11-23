@@ -14,12 +14,14 @@ because the `gemini-4-hydrogen` daily free quota had been spent earlier that day
 The D4 session ended 71 minutes before the D5 one, so any sentence that compares
 them means an hour apart on the same day, not days.
 
-The measured runs predate one code change: an item the device already left to a
-person because of the line is no longer sent to the cloud. The recorded hybrid
-numbers therefore include 17 calls on hedged lines that the shipped code would now
-keep with a person, and 3 calls on items the rule pack left open. The next run,
-planned in `recheck-2026-11-24.md`, measures the narrowed rule with
-`gemini-4-hydrogen`.
+The measured runs predate two code changes: an item the device already left to a
+person because the line was uncertain is no longer sent to the cloud, and an
+accepted cloud answer can now become the finding the rule pack judges. The
+recorded hybrid numbers therefore include 17 calls on hedged lines that the
+shipped code would now keep with a person, and they show no verdict changed by a
+cloud answer, which the strong hybrid now makes possible. The next run, planned
+in `recheck-2026-11-24.md`, measures both changes with `gemini-4-hydrogen` and
+adds the ten cloud path notes.
 
 `scripts/assemble-d5.mjs` recomputes every count from the per item table and
 refuses to write the JSON when one disagrees with what the session printed. The
@@ -71,10 +73,17 @@ The ten held-out notes (`HELDOUT_SCENARIOS` in `../src/bench/scenarios.ts`) ask
 for the same judgements in other words. They were written after the rules and
 are never counted with the forty.
 
+The ten cloud path notes (`OPEN_SCENARIOS`, same file, 2026-11-24) are decisive
+lines that name a defect and then score it down from one quiet word. The rule
+parser leaves all ten open, which is the item the cloud is asked about, so the
+same notes measure the device alone against the hybrid that may adopt a cloud
+finding. Eight have a key of fail and two have a key of review; the two are the
+control for oversettling. No run has measured this set yet.
+
 | path | code | what it does |
 |---|---|---|
 | on-device | `src/ai/hybrid.ts` (`ONLY_ON_DEVICE`, or the browser `LanguageModel` in the published build), `src/rules/evidence.ts`, `src/rules/judge.ts` | Gemini Nano structures the line, the answer is checked against the line, the rule pack decides, the photo never leaves the device |
-| hybrid | `src/pipeline.ts` | the shipped flow: on-device first, cloud only for an item the rule pack leaves open on a decisive line, inside the daily budget, every answer checked by `src/rules/verify.ts`. The recorded run was made before the held line rule, so it shows more cloud calls than the shipped code makes |
+| hybrid | `src/pipeline.ts` | the shipped flow: on-device first, cloud only for an item with a decisive line that the device could not settle, inside the daily budget, every answer checked by `src/rules/verify.ts`, and an accepted answer becomes the finding the rule pack judges. The recorded run was made before these rules, so it shows more cloud calls than the shipped code makes and no settled verdict |
 | cloud only | baseline in `src/bench/harness.ts` | every item goes to the cloud with its photo and its line; measured on six items in D4 because of the free tier |
 
 ## How to reproduce
@@ -86,8 +95,9 @@ are never counted with the forty.
    free on the profile volume) and a gesture to start the download.
 3. `bench/kaggle_runner.py` does the same thing from a free Kaggle CPU session,
    including the 1440 px and 390 px layout checks, and prints the result as a
-   table. Add `set=heldout` to the page URL for the ten held-out notes, or run
-   `bench/kaggle_layout_check.py` for the layout checks alone.
+   table. Add `set=heldout` to the page URL for the ten held-out notes, `set=open`
+   for the ten cloud path notes, or run `bench/kaggle_layout_check.py` for the
+   layout checks alone.
 
 A run needs a key. The public build carries none: the config comes from the URL
 fragment at runtime and is never written down.

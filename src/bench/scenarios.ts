@@ -468,3 +468,104 @@ export const HELDOUT_SCENARIOS: BenchScenario[] = [
 export function heldoutById(id: string): BenchScenario | undefined {
   return HELDOUT_SCENARIOS.find((scenario) => scenario.id === id);
 }
+
+/**
+ * Ten notes written for the path the cloud is asked about, 2026-11-24.
+ *
+ * Every note here is decisive: nothing in it says the writer could not see or
+ * could not tell, so the device may put it to the cloud. Each names the defect
+ * and then scores it from one quiet word (`small`, `slight`, `hairline`) while
+ * the rest of the line says the condition is on the part that matters. The rule
+ * parser reads the quiet word and leaves the item open, which is exactly the
+ * item the narrowed cloud rule was built for. A person writing the key said fail
+ * on eight of them and review on two, and those two are the control: a cloud that
+ * settles them has over-claimed, and the gate or the pack has to catch it.
+ *
+ * The key was written before any model ran on these notes.
+ */
+export const OPEN_SCENARIOS: BenchScenario[] = [
+  {
+    id: "O01",
+    itemId: "sp-10",
+    kind: "fail",
+    expected: "fail",
+    note: "Small patch of paint on the deflector, the bulb itself is under the paint.",
+    photo: "sprinkler.jpg",
+  },
+  {
+    id: "O02",
+    itemId: "sd-08",
+    kind: "fail",
+    expected: "fail",
+    note: "Small patch of paint on the casing, the grille is sealed with paint.",
+    photo: "smoke-detector.jpg",
+  },
+  {
+    id: "O03",
+    itemId: "el-03",
+    kind: "fail",
+    expected: "fail",
+    note: "Slightly corroded casing, the cover is held by one screw and lifts away.",
+    photo: "panel.jpg",
+  },
+  {
+    id: "O04",
+    itemId: "fe-01",
+    kind: "fail",
+    expected: "fail",
+    note: "Small dent in the cabinet door, the glass is cracked and the gauge sits at zero.",
+    photo: "extinguisher.jpg",
+  },
+  {
+    id: "O05",
+    itemId: "ex-02",
+    kind: "fail",
+    expected: "fail",
+    note: "Slight flicker on the sign, half of the legend goes dark when the corridor lights come on.",
+    photo: "exit-sign.jpg",
+  },
+  {
+    id: "O06",
+    itemId: "fh-07",
+    kind: "fail",
+    expected: "fail",
+    note: "Small crack in the reel housing, the sign has fallen off and the valve is stiff.",
+    photo: "hose-reel.jpg",
+  },
+  {
+    id: "O07",
+    itemId: "fe-11",
+    kind: "fail",
+    expected: "fail",
+    note: "Slightly corroded spare cylinder, the tag is gone and it sits outside the door.",
+    photo: "extinguisher-cart.jpg",
+  },
+  {
+    id: "O08",
+    itemId: "fe-01",
+    kind: "fail",
+    expected: "fail",
+    note: "Small dent in the cabinet, the door will not close and the extinguisher sits loose.",
+    photo: "extinguisher.jpg",
+  },
+  {
+    id: "O09",
+    itemId: "sp-10",
+    kind: "borderline",
+    expected: "review",
+    note: "Slight paint on the rim of the deflector, a smudge, the bulb itself is clear.",
+    photo: "sprinkler.jpg",
+  },
+  {
+    id: "O10",
+    itemId: "sd-08",
+    kind: "borderline",
+    expected: "review",
+    note: "Slight paint on the rim of the detector, the grille is fully open.",
+    photo: "smoke-detector.jpg",
+  },
+];
+
+export function openById(id: string): BenchScenario | undefined {
+  return OPEN_SCENARIOS.find((scenario) => scenario.id === id);
+}

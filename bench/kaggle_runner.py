@@ -49,6 +49,11 @@ TAG = globals().get("TAG", "")
 # 1: run the forty item arms a second time in the same session, so the spread of
 # one arm against itself is measured and not guessed.
 REPEAT = int(globals().get("REPEAT", 0))
+# 1: walk the ten notes written for the cloud path through both arms. They are
+# the notes the narrowed cloud rule exists for, so this is the set that shows
+# what an accepted cloud finding adds to a verdict. Keep CLOUD_ONLY at 0 when
+# this is on: the ten calls and the forty item arms share one daily meter.
+OPEN_SET = int(globals().get("OPEN", 1))
 
 SITE = BASE.replace("bench/", "")
 
@@ -277,6 +282,16 @@ def main():
                 ]
                 print(f"VARIATION {arm_name} {len(differ)} of {len(first)} {sorted(differ)}", flush=True)
 
+        open_set = None
+        if OPEN_SET:
+            opened = run_arms(browser, device=True, hybrid=True, cloud=False, count=CLOUD_ONLY, set_name="open")
+            print("cloud path arms done", flush=True)
+            open_set = {
+                "metrics": {arm["arm"]: arm for arm in opened.get("arms", [])},
+                "items": dict(opened.get("items", {})),
+                "agreed": {arm["arm"]: f"{arm['agreed']} of {arm['items']}" for arm in opened.get("arms", [])},
+            }
+
         heldout = None
         if HOLDOUT:
             heldout = run_arms(browser, device=True, hybrid=False, cloud=False, count=CLOUD_ONLY, set_name="heldout")
@@ -298,6 +313,8 @@ def main():
         }
         if heldout:
             results["holdout"] = {"metrics": heldout["arms"][0], "items": heldout["items"]["device"]}
+        if open_set:
+            results["open"] = open_set
 
         print("ITEMS_BEGIN", flush=True)
         for arm_name, rows in results.get("items", {}).items():
@@ -313,6 +330,26 @@ def main():
                             "recorded": row.get("recorded"),
                             "check": row.get("evidence"),
                             "gate": row.get("gate"),
+                            "ms": row.get("latencyMs"),
+                        },
+                        ensure_ascii=False,
+                    ),
+                    flush=True,
+                )
+        for arm_name, rows in (results.get("open") or {}).get("items", {}).items():
+            for row in rows:
+                print(
+                    "ITEM "
+                    + json.dumps(
+                        {
+                            "arm": f"open-{arm_name}",
+                            "id": row.get("scenario"),
+                            "expected": row.get("expected"),
+                            "answer": row.get("answerVerdict"),
+                            "recorded": row.get("recorded"),
+                            "check": row.get("evidence"),
+                            "gate": row.get("gate"),
+                            "cloud": row.get("cloudCalled"),
                             "ms": row.get("latencyMs"),
                         },
                         ensure_ascii=False,
@@ -346,6 +383,8 @@ def main():
             print(json.dumps(arm, ensure_ascii=False), flush=True)
         if results.get("holdout"):
             print(json.dumps({**results["holdout"]["metrics"], "arm": "holdout"}, ensure_ascii=False), flush=True)
+        for arm_name, arm in (results.get("open") or {}).get("metrics", {}).items():
+            print(json.dumps({**arm, "arm": f"open-{arm_name}"}, ensure_ascii=False), flush=True)
         print("METRICS_END", flush=True)
 
         blob = base64.b64encode(gzip.compress(json.dumps(results, ensure_ascii=False).encode())).decode()

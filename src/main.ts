@@ -166,6 +166,23 @@ const GATE_SAMPLES: GateSample[] = [
       suggestedVerdict: "fail",
     },
   },
+  {
+    id: "no-severity",
+    itemId: "sp-10",
+    label: "A defect with no severity that the line does not name",
+    note: "Head clear, cage intact, clearance below open.",
+    answer: {
+      targetPresent: true,
+      targetName: "sprinkler head",
+      defectType: "damaged_housing",
+      severity: "none",
+      obscured: false,
+      note: "cage looks damaged",
+      clauseId: "SP-10",
+      remedy: "Have someone check the cage.",
+      suggestedVerdict: "unknown",
+    },
+  },
 ];
 
 function checkGateSample(sample: GateSample): void {
@@ -232,13 +249,16 @@ function latestFor(itemId: string): Observation | undefined {
 }
 
 /**
- * The cloud is asked only about an item the device could not settle by rule.
- * When the line itself is why the item is open, a bigger model reading the same
- * line cannot settle it either, so the item stays with a person and the day's
- * cloud budget is not spent on it.
+ * The cloud is asked only about an item the device could not settle: either the
+ * rule pack left it open on a decisive line, or the device's own reading did
+ * not survive the check against that line. When the line itself is why the item
+ * is open, a bigger model reading the same line cannot settle it either, so the
+ * item stays with a person and the day's cloud budget is not spent on it.
  */
 function canRetryInCloud(observation: Observation): boolean {
-  return Boolean(observation.reviewRequired && observation.finding && observation.noteCheck?.hold === "none");
+  return Boolean(
+    observation.reviewRequired && observation.note.trim() && observation.noteCheck?.hold !== "inconclusive",
+  );
 }
 
 function summary(): WalkSummary {
@@ -297,7 +317,7 @@ function footText(): string {
   if (!state.firebaseReady) {
     return "Built-in demo mode: on-device structuring when supported, cloud checks off";
   }
-  return `Firebase AI Logic hybrid / Gemini Nano on device / ${esc(state.cloudModel)} for unknowns`;
+  return `Firebase AI Logic hybrid / Gemini Nano on device / ${esc(state.cloudModel)} for items the device leaves open`;
 }
 
 function badgeRow(): string {
@@ -357,6 +377,26 @@ function itemCard(item: RulePack["items"][number], index: number): string {
     </article>`;
 }
 
+/** Why an item is still open when no cloud call was made for it. */
+function unsettledReason(observation: Observation): string {
+  const hold = observation.noteCheck?.hold ?? "none";
+  if (hold === "inconclusive") {
+    return "The line is why this item is open, so it was not sent to the cloud and no budget was spent.";
+  }
+  if (hold === "misread") {
+    return !state.firebaseReady
+      ? "The device's reading did not hold and cloud checks are off in this build, so a person has to look at this item."
+      : !state.online
+        ? "The device's reading did not hold and there is no network. The item waits in the queue for a cloud check."
+        : "The device's reading did not hold and no cloud call was made for this item, so a person has to look at it.";
+  }
+  return !state.firebaseReady
+    ? "Cloud checks are off in this build, so the item is marked for a person."
+    : !state.online
+      ? "No network. The item waits in the queue for a cloud check."
+      : "No cloud call was made for this item.";
+}
+
 function resultBlock(item: RulePack["items"][number], observation: Observation | undefined, busy: boolean): string {
   if (busy) {
     return `<div class="result working"><span class="dot-pulse"></span>Reading the note, judging, and writing the record.</div>`;
@@ -379,20 +419,17 @@ function resultBlock(item: RulePack["items"][number], observation: Observation |
       `Cloud call ${observation.cloud.model}: ${formatBytes(observation.cloud.payloadBytes)} of typed summary, no photo.`,
     );
     if (observation.cloud.accepted) {
-      details.push("Answer checked on the device: clause in the pack, schema complete, verdict agrees with the rule pack.");
+      details.push("Answer passed seven checks on the device: schema, clause in the pack, clause applies, no contradiction, the rule pack agrees with the suggested verdict, no hedge turned into a verdict, and the line carries the finding.");
+      details.push(
+        observation.cloud.settled
+          ? `The rule pack settled this item at ${observation.verdict.toUpperCase()} from the answer's finding.`
+          : "The rule pack still leaves this item open, so a person decides it.",
+      );
     } else {
       details.push("Answer rejected on the device. A person has to decide this item.");
     }
   } else if (observation.verdict === "unknown") {
-    details.push(
-      observation.noteCheck && observation.noteCheck.hold !== "none"
-        ? "The line is why this item is open, so it was not sent to the cloud and no budget was spent."
-        : !state.firebaseReady
-          ? "Cloud checks are off in this build, so the item is marked for a person."
-          : !state.online
-            ? "No network. The item waits in the queue for a cloud check."
-            : "No cloud call was made for this item.",
-    );
+    details.push(unsettledReason(observation));
   }
 
   const rejectionList =
@@ -532,7 +569,7 @@ function gateSection(): string {
     <section class="card gate">
       <div class="section-head">
         <h2>Try the verification gate</h2>
-        <p>Five answers a cloud model could send back. The device checks each one before it can change a record, with no network and no key, including one that settles a line the inspector left open.</p>
+        <p>Six answers a cloud model could send back. The device checks each one before it can change a record, with no network and no key: one that settles a line the inspector left open, and one whose defect the line does not name.</p>
       </div>
       <div class="scroll">
         <table class="gate-table">
@@ -687,8 +724,8 @@ function render(): void {
           <ol>
             <li>The note is structured on the device into one schema. Without the on-device model, the built-in rule parser does it.</li>
             <li>The rule pack decides pass, fail or unknown. A model never sets the verdict on its own.</li>
-            <li>Only an item the rule pack leaves open, on a line that was decisive, goes to the cloud, inside the day's budget, as a typed summary. A line that says the observer could not tell goes straight to a person.</li>
-            <li>The answer is checked on the device. A wrong clause, a missing field or a contradiction is rejected and handed to a person.</li>
+            <li>Only an item the rule pack leaves open, on a line that was decisive, goes to the cloud, inside the day's budget, as a typed summary. So does an item whose device reading did not survive the check against the line. A line that says the observer could not tell goes straight to a person.</li>
+            <li>The answer is checked on the device, seven checks including whether the line can carry the finding. A wrong clause, a missing field, a hedge turned into a verdict or a contradiction is rejected and handed to a person. An answer that passes becomes the finding, and the rule pack turns it into the verdict.</li>
           </ol>
         </div>
       </aside>

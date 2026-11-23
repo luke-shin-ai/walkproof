@@ -81,11 +81,14 @@ export function buildStructurePrompt(item: InspectionItem, note: string): string
 
 export function buildClassifyPrompt(item: InspectionItem, clauseIds: string[], payloadJson: string): string {
   return [
-    "You classify one building safety observation the device could not decide.",
+    "You settle one building safety observation the device could not settle.",
     `Checklist item: ${item.label} in ${item.zone}.`,
     `Allowed clause ids: ${clauseIds.join(", ")}. Cite exactly one of them and no other value.`,
     `Observation: ${payloadJson}`,
-    "Set defectType and severity from what the observation describes. Use none when nothing is wrong.",
+    "Judge the note yourself. The deviceDraft field is what the device read and why this item reached you; do not copy its severity when the note says otherwise.",
+    "Set defectType and severity from what the note says. Use none when nothing is wrong.",
+    "Never report the item as absent unless the note says it is missing, gone, or not there.",
+    "A note can be a guess. When it says the writer could not see or could not tell, was not sure, thought, guessed, or that something seemed or looked like something, set obscured to true, report only what the note states plainly, and suggest unknown.",
     "suggestedVerdict must follow from your own defectType and severity.",
     "remedy is one short sentence a building manager can act on today.",
     "Answer with the JSON object only. No text outside the object.",

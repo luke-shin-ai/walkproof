@@ -1,5 +1,5 @@
 import { DEFECT_TYPE_VALUES, SEVERITY_VALUES, VERDICT_VALUES } from "../ai/schema";
-import { noteEvidence } from "./evidence";
+import { crossCheckNote, noteEvidence } from "./evidence";
 import { judge } from "./judge";
 import type { CloudAnswer, DefectType, Finding, InspectionItem, RulePack, Severity, Verdict } from "../types";
 
@@ -7,7 +7,13 @@ export interface Verification {
   accepted: boolean;
   reasons: string[];
   answer: CloudAnswer | null;
-  /** The verdict the rule pack reaches from the cloud's own finding. */
+  /**
+   * The finding the rule pack judged. It is the cloud's own finding, narrowed
+   * from the inspector's line where the line supports the change, so the record
+   * carries the evidence the verdict was produced from.
+   */
+  finding: Finding | null;
+  /** The verdict the rule pack reaches from that finding. */
   verdictFromRules: Verdict | null;
 }
 
@@ -46,17 +52,27 @@ function checkShape(value: unknown, item: InspectionItem, pack: RulePack): strin
 }
 
 /**
- * G3: the device checks a cloud answer before it can change a record.
+ * G3: the device checks a cloud answer before it can change a record. Seven
+ * checks, all of them reachable from the product path:
  *
  * 1. Every required field is present and of the right type.
- * 2. The cited clause exists in the pack and is one this item may cite.
- * 3. The answer does not contradict the on-device finding about presence.
- * 4. The rule pack, run on the cloud's own finding, agrees with the verdict the
+ * 2. The cited clause exists in the pack.
+ * 3. The cited clause is one this item may cite.
+ * 4. The answer does not contradict the on-device finding about presence, when
+ *    that finding is one the device still trusts.
+ * 5. The rule pack, run on the cloud's own finding, agrees with the verdict the
  *    cloud suggested. A model may supply evidence; it may not overrule the pack.
- * 5. A non-unknown on-device verdict is never replaced by a different one.
- * 6. A line that says the observation was not conclusive cannot be settled by
- *    a model that reads the same line. The cloud may still add a clause and a
- *    remedy, but an answer that turns a hedge into a verdict is refused.
+ * 6. A line that says the observation was not conclusive cannot be settled by a
+ *    model that reads the same line. An answer that turns a hedge into a verdict
+ *    is refused.
+ * 7. The line itself carries the answer. The same cross check the device applies
+ *    to its own reading (`crossCheckNote`) is applied to the cloud's finding: an
+ *    absence claim the line does not make, or a defect with no severity that the
+ *    line does not name, is refused instead of recorded.
+ *
+ * A guard sits beside them: an answer may not replace a settled on-device
+ * verdict. The app asks the cloud only about items it has not settled, so that
+ * guard is reached by a caller or a test, not by the product path.
  *
  * A failed check is not an error state to hide: the record is marked
  * `rejected_unsupported` and goes to a person.
@@ -72,7 +88,13 @@ export function verifyCloudAnswer(
 ): Verification {
   const shape = checkShape(raw, item, pack);
   if (shape.length || !isRecord(raw)) {
-    return { accepted: false, reasons: shape.length ? shape : ["the answer is not an object"], answer: null, verdictFromRules: null };
+    return {
+      accepted: false,
+      reasons: shape.length ? shape : ["the answer is not an object"],
+      answer: null,
+      finding: null,
+      verdictFromRules: null,
+    };
   }
 
   const answer: CloudAnswer = {
@@ -110,10 +132,33 @@ export function verifyCloudAnswer(
         `the answer settles the item at ${rejudged.verdict} while the line says the observation was not conclusive (${evidence.marks.join(", ")})`,
       );
     }
+
+    /* The line has the last word on what the answer may claim. The device runs
+       the same check on its own reading, so a cloud answer is held to it too. */
+    const carried = crossCheckNote(item, note, answer);
+    if (carried.hold === "misread") {
+      reasons.push(...carried.reasons.map((reason) => `the line does not carry the answer: ${reason}`));
+    }
   }
 
   if (reasons.length) {
-    return { accepted: false, reasons, answer, verdictFromRules: rejudged.verdict };
+    return { accepted: false, reasons, answer, finding: null, verdictFromRules: rejudged.verdict };
   }
-  return { accepted: true, reasons: [], answer, verdictFromRules: rejudged.verdict };
+
+  /* Where the line supports a change, the device narrows the answer before the
+     pack judges it, exactly as it narrows its own reading. The narrowed finding
+     is what the record carries, so the pack produces the verdict from evidence
+     the line can carry. */
+  const carried = note.trim() ? crossCheckNote(item, note, answer) : null;
+  const finding: Finding = carried?.finding ?? answer;
+  const judgement = judge(item, finding, now);
+  const amended = carried && carried.action === "amended" ? carried.reasons : [];
+
+  return {
+    accepted: true,
+    reasons: amended,
+    answer,
+    finding,
+    verdictFromRules: judgement.verdict,
+  };
 }

@@ -80,6 +80,12 @@ export interface CloudCheck {
   error: string | null;
   budgetUsed: number;
   budgetLimit: number;
+  /** Why this item was put to the cloud: the pack left it open, or the device's own reading did not hold. */
+  askedBecause: "pack_open" | "untrusted_reading";
+  /** The verdict the device held before the call, always unknown for an item that is sent. */
+  deviceVerdict: Verdict;
+  /** True when the accepted answer let the rule pack settle pass or fail. */
+  settled: boolean;
 }
 
 export interface Observation {

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { median, percentile, runCloudOnlyArm, runDeviceArm, runHybridArm, type BenchDeps } from "../src/bench/harness";
-import { BENCH_SCENARIOS } from "../src/bench/scenarios";
+import { BENCH_SCENARIOS, OPEN_SCENARIOS } from "../src/bench/scenarios";
+import { judgeNote } from "../src/rules/evidence";
+import { structureNote } from "../src/rules/structure";
 import { DEFAULT_PACK } from "../src/rules/pack";
 
 const photo = { name: "extinguisher.jpg", bytes: 1000, mime: "image/jpeg", dataUrl: "AAAA" };
@@ -169,6 +171,53 @@ describe("the hybrid arm", () => {
     );
     expect(calls).toBe(1);
     expect(result.metrics.notes.join(" ")).toMatch(/free daily cloud quota/);
+  });
+});
+
+describe("the cloud path set", () => {
+  it("is ten decisive notes the rule pack leaves open", () => {
+    expect(OPEN_SCENARIOS).toHaveLength(10);
+    expect(new Set(OPEN_SCENARIOS.map((entry) => entry.id)).size).toBe(10);
+    for (const scenario of OPEN_SCENARIOS) {
+      const item = DEFAULT_PACK.items.find((entry) => entry.id === scenario.itemId);
+      expect(item).toBeDefined();
+      const decision = judgeNote(item!, scenario.note, structureNote(item!, scenario.note), new Date("2026-11-23T09:00:00Z"));
+      expect(decision.evidence.hold).toBe("none");
+      expect(decision.verdict).toBe("unknown");
+    }
+  });
+
+  it("leaves the device arm short and the rule pack settles what the cloud answers", async () => {
+    const device = await runDeviceArm(deps(), OPEN_SCENARIOS);
+    expect(device.metrics.agreed).toBe(2);
+
+    const hybrid = await runHybridArm(
+      deps({
+        classify: async (item) => ({
+          raw: JSON.stringify({
+            targetPresent: true,
+            targetName: item.label,
+            defectType: "damaged_housing",
+            severity: "high",
+            obscured: false,
+            note: "condition on the part that matters",
+            clauseId: item.clauses[0],
+            remedy: "Take the item out of use and book the repair today.",
+            suggestedVerdict: "fail",
+          }),
+          latencyMs: 20,
+          error: null,
+          model: "gemini-4-hydrogen",
+          modelFallback: false,
+          source: "in_cloud",
+        }),
+      }),
+      OPEN_SCENARIOS,
+    );
+    expect(hybrid.metrics.cloudCalls).toBe(10);
+    expect(hybrid.metrics.settledByCloud).toBe(10);
+    expect(hybrid.metrics.settledByCloudCorrect).toBe(8);
+    for (const entry of hybrid.items) expect(entry.source).toBe("in_cloud");
   });
 });
 

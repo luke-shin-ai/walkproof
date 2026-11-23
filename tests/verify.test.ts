@@ -124,3 +124,49 @@ describe("the gate on a line the person left open", () => {
     expect(result.accepted).toBe(true);
   });
 });
+
+describe("the gate on a line that has to carry the answer", () => {
+  it("refuses a defect with no severity that the line does not name", () => {
+    const result = verifyCloudAnswer(
+      answer({ defectType: "crack", severity: "none", suggestedVerdict: "unknown" }),
+      item,
+      DEFAULT_PACK,
+      "unknown",
+      deviceFinding,
+      now,
+      "Detector clear, grille open, nothing on it.",
+    );
+    expect(result.accepted).toBe(false);
+    expect(result.reasons.join(" ")).toContain("the line does not carry the answer");
+  });
+
+  it("refuses an absence claim the line does not make when the device has no finding", () => {
+    const result = verifyCloudAnswer(
+      answer({ targetPresent: false, defectType: "none", severity: "none", suggestedVerdict: "unknown" }),
+      item,
+      DEFAULT_PACK,
+      "unknown",
+      null,
+      now,
+      "Detector clean, grille open, test light blinks.",
+    );
+    expect(result.accepted).toBe(false);
+    expect(result.reasons.join(" ")).toContain("the line does not carry the answer");
+  });
+
+  it("sets the weight from the line when the answer names the defect without a severity", () => {
+    const result = verifyCloudAnswer(
+      answer({ defectType: "painted_over", severity: "none", suggestedVerdict: "unknown" }),
+      item,
+      DEFAULT_PACK,
+      "unknown",
+      deviceFinding,
+      now,
+      "Detector painted over during the refit, the grille is sealed.",
+    );
+    expect(result.accepted).toBe(true);
+    expect(result.finding?.severity).toBe("medium");
+    expect(result.verdictFromRules).toBe("fail");
+    expect(result.reasons.join(" ")).toContain("the line supports");
+  });
+});

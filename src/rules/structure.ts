@@ -139,8 +139,35 @@ export interface CloudPayload {
   bytes: number;
 }
 
-/** What leaves the building: a typed summary with no image and no identifiers. */
-export function buildCloudPayload(item: InspectionItem, finding: Finding | null, pack: RulePack): CloudPayload {
+/**
+ * Why this item is being put to the cloud. Both are decisive lines; the
+ * difference is only which side failed to settle it.
+ *
+ * - `pack_open`: the device read the line and the rule pack left the item open.
+ * - `untrusted_reading`: the device's own reading did not survive the check
+ *   against the line, so the device has no finding to decide with.
+ */
+export type CloudReason = "pack_open" | "untrusted_reading";
+
+export interface CloudPayloadInput {
+  /** The device's draft, shown so the answer can be compared with it. */
+  draft: Finding | null;
+  /** False when the draft is the reading the line did not support. */
+  draftTrusted: boolean;
+  reason: CloudReason;
+}
+
+const REASON_TEXT: Record<CloudReason, string> = {
+  pack_open: "the rule pack leaves this item open on a line that says what the inspector saw",
+  untrusted_reading: "the device's own reading did not survive the check against the line, so it is not used",
+};
+
+/**
+ * What leaves the building: a typed summary with no image and no identifiers.
+ * The line is redacted, the photo is named but not attached, and the device's
+ * draft is marked as either the reason the item is open or a reading to ignore.
+ */
+export function buildCloudPayload(item: InspectionItem, pack: RulePack, input: CloudPayloadInput): CloudPayload {
   const summary = {
     pack: pack.version,
     itemId: item.id,
@@ -148,15 +175,17 @@ export function buildCloudPayload(item: InspectionItem, finding: Finding | null,
     zone: item.zone,
     expects: item.expects,
     allowedClauseIds: item.clauses,
-    finding: finding
+    openBecause: REASON_TEXT[input.reason],
+    deviceDraft: input.draft
       ? {
-          targetPresent: finding.targetPresent,
-          defectType: finding.defectType,
-          severity: finding.severity,
-          obscured: finding.obscured,
+          targetPresent: input.draft.targetPresent,
+          defectType: input.draft.defectType,
+          severity: input.draft.severity,
+          obscured: input.draft.obscured,
+          trusted: input.draftTrusted,
         }
       : null,
-    note: finding ? redactForCloud(finding.note) : "",
+    note: input.draft ? redactForCloud(input.draft.note) : "",
     photo: "kept on the device",
   };
   const json = JSON.stringify(summary);

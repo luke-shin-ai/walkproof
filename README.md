@@ -3,9 +3,11 @@
 Monthly building safety walkthrough for the person who has no safety officer.
 A manager walks the building with a phone, photographs each checklist item and
 writes one line. The device structures that line and the rule pack decides.
-Only an item the rule pack leaves open, on a line that says what the inspector
-saw, goes to the cloud, as a typed summary, inside a daily budget, and the
-answer is checked on the device before it can enter the record.
+Only an item the device could not settle, on a line that says what the inspector
+saw, goes to the cloud, as a typed summary, inside a daily budget. There the
+cloud may name the defect the device could not place. That answer is checked on
+the device against the line and the pack, and the rule pack, not the model, turns
+it into pass, fail or review.
 
 Built for the Firebase AI Logic hybrid hackathon (Web/Chrome). In a build with
 Firebase values the on-device path uses Gemini Nano through `firebase/ai`, and
@@ -26,17 +28,50 @@ that can be read or run, not believed.
 - Technological Implementation: one finding schema is produced on the device and
   requested from the cloud (`src/ai/schema.ts`), both paths go through Firebase AI
   Logic (`ONLY_ON_DEVICE` and `ONLY_IN_CLOUD`, `src/ai/hybrid.ts`), and every
-  cloud answer is checked on the device before it can change anything
-  (`src/rules/verify.ts`). `npm test` runs those checks.
+  cloud answer passes seven checks on the device before the rule pack turns it
+  into a verdict (`src/rules/verify.ts`). `npm test` runs those checks.
 - Design: a checklist, a ledger with a source badge per record, CSV export and a
   printable record with clauses and deadlines. The header and the footer say what
   this build is actually running, including the published build with no cloud.
 - Potential Impact: small commercial buildings rarely have a safety officer. The
   walk happens on the manager's phone, interior photos stay in the building, and a
   person signs off what the app could not settle.
-- Quality of the Idea: the device decides and the cloud only proposes. The rule
-  pack, not a model, turns evidence into a verdict, and a refused cloud answer is
-  shown as refused.
+- Quality of the Idea: the device decides and the cloud only proposes. A model
+  may supply a finding the device could not place; the rule pack still turns that
+  finding into a verdict, and a refused cloud answer is shown as refused.
+
+## The strong hybrid, 2026-11-24
+
+Until this change the cloud could add a clause and a remedy to an open item, and
+the gate made sure it could not turn a hedge into a verdict. The recorded run of
+2026-11-23 showed the limit of that design: none of twenty cloud answers changed
+a verdict, because an accepted answer was only ever added to an item the device
+had already left open.
+
+Now the cloud may supply the missing piece. Two kinds of item are sent, and both
+carry a decisive line:
+
+- the rule pack read the line and left the item open (`hold: none`), or
+- the device's own reading did not survive the check against the line
+  (`hold: misread`), so the device has no finding to decide with.
+
+An answer that passes all seven checks becomes the finding the record carries,
+and the rule pack on the device turns that finding into pass, fail or review
+(`src/pipeline.ts`). The record shows `source: in_cloud` and the cloud row says
+whether the pack settled the item. A line that says the observer could not tell
+is still never sent, and the cloud still never receives a photo.
+
+Where the line supports a change, the device narrows the answer before the pack
+judges it, using the same cross check it applies to its own reading. A cloud that
+names a defect without a severity gets the severity the line's own words carry. A
+cloud that claims an absence the line does not state is refused.
+
+The ten cloud path notes (`?set=open` on the bench page, `src/bench/scenarios.ts`)
+were written for this path: each is decisive, each names the defect and scores it
+down from one quiet word (`small`, `slight`), and the rule parser leaves all ten
+open. The human key says fail on eight and review on two. That set is what the
+next run measures, and until it runs the README makes no claim about how often
+the cloud gets it right.
 
 ## Measured on 2026-11-23
 
@@ -89,13 +124,12 @@ a verdict. On this set the measured value of the cloud is the clause and the
 remedy, not accuracy: it did not make a record more right, and the gate is what
 kept it from making a record wrong.
 
-Since that run the cloud rule has been narrowed. An item the device already left
-to a person because of the line is no longer sent, so the day's twenty calls go
-only to items the rule pack leaves open, which is where a clause and a remedy are
-all a model can add. In this run that would have been three of the twenty calls;
-the other seventeen re-read hedged lines and came back as ten acceptances and
-seven refusals. The recorded numbers stay as they were measured, and the next run
-measures the narrowed rule (`benchmarks/recheck-2026-11-24.md`).
+Since that run the cloud rule has been narrowed twice. An item the device already
+left to a person because the line was uncertain is no longer sent at all, so the
+day's twenty calls go to items with a decisive line. And an accepted answer can
+now become the finding the pack judges, as described above. The recorded numbers
+stay as they were measured; the next run measures both changes
+(`benchmarks/recheck-2026-11-24.md`).
 
 The ten held-out notes show where the word list stops: a hedge phrased without
 one of its words still gets settled, and H03, a failure written as "cover is off
@@ -116,9 +150,12 @@ D1 to D5 of the build plan are in place (2026-11-23).
   rule parser as the fallback when the device has neither.
 - Deterministic verdicts (`pass`, `fail`, `unknown`) and fix deadlines from the
   rule pack.
-- Cloud escalation for items the rule pack leaves open on a decisive line, behind
-  a daily budget meter. An item the device already left to a person because of
-  the line is recorded without a cloud call.
+- Cloud escalation for items the device could not settle on a decisive line, behind
+  a daily budget meter: the pack left the item open, or the device's reading did
+  not survive the check against the line. An item whose line says the observer
+  could not tell is recorded without a cloud call.
+- An accepted cloud answer becomes the finding the rule pack judges, so the cloud
+  can settle an item at pass or fail and the record shows `in_cloud`.
 - The device reads the inspector's line itself and checks every answer against
   it: an absence claim the line does not make, a defect with no severity, or a
   verdict on a line that says the observer could not tell is amended or left
@@ -139,7 +176,7 @@ D1 to D5 of the build plan are in place (2026-11-23).
 | photo, note, location | device only | basement, stair core and car park have no signal; interior photos stay in the building |
 | verdict pass / fail / unknown | local rule pack | the same photo, note and pack must give the same answer every time |
 | checklist, clause texts, fix days, cloud budget | Remote Config, cached on the device | a clause change reaches every device without a release |
-| defect type and remedy for an item the rule pack leaves open | cloud, typed text only | the device does not carry the whole code book |
+| a defect type the device could not place, and the remedy | cloud, typed text only | the device does not carry the whole code book; the answer is only evidence until the pack judges it |
 | per building repeat defects | later, anonymous counts | one device cannot see across buildings |
 
 The photo is never sent to a model or a server. `src/photo.ts` re-encodes it
@@ -156,8 +193,9 @@ reduced to the structured finding plus a redacted line (`src/rules/structure.ts`
 | check the answer | `src/rules/evidence.ts` | reads the line and narrows what an answer may claim: the line's own hedge, absence the line does not state, a defect with no severity |
 | judge | `src/rules/judge.ts` | the only code that produces a verdict, with the deadline from the item |
 | G2 budget | `src/budget.ts` | a call is made only while today has room; a full meter leaves the item queued |
-| cloud | `src/ai/hybrid.ts` | `ONLY_IN_CLOUD` with `gemini-4-hydrogen` and `responseSchema`; a missing model falls back once to `gemini-3.5-flash-lite`, the ledger shows the model that answered, and a call that has not answered in 30 s is recorded as a failed check so the walk can continue. An item the device already left to a person because of the line never reaches this step |
-| G3 gate | `src/rules/verify.ts` | schema, clause exists in the pack, clause applies to this item, no contradiction with the device finding, and the rule pack must reach the verdict the cloud suggested |
+| cloud | `src/ai/hybrid.ts` | `ONLY_IN_CLOUD` with `gemini-4-hydrogen` and `responseSchema`; a missing model falls back once to `gemini-3.5-flash-lite`, the ledger shows the model that answered, and a call that has not answered in 30 s is recorded as a failed check so the walk can continue. Only an item with a decisive line reaches this step, and the payload says whether the pack left the item open or the device's own reading failed |
+| G3 gate | `src/rules/verify.ts` | seven checks: schema, clause exists, clause applies, no contradiction with a trusted device finding, the pack agrees with the suggested verdict, no hedge turned into a verdict, and the line carries the finding |
+| settle | `src/pipeline.ts` | an accepted answer becomes the recorded finding; `judge()` on the device turns it into pass, fail or review, and the record says `in_cloud` |
 | G1 record | `src/ledger.ts`, `src/main.ts` | ledger with source badges and CSV, printable record with clause and deadline |
 | G5 pack | `src/config/remoteConfig.ts` | Remote Config `rule_pack`, cached for 30 days, built-in pack when nothing valid is available |
 
@@ -173,7 +211,7 @@ person".
 npm install
 cp .env.example .env      # Firebase web app values, or leave empty for local only
 npm run dev
-npm test                  # 94 tests
+npm test                  # 110 tests
 npm run build             # type check, then the Vite build
 npm run check:ai-tells    # fails on machine looking punctuation and on secrets
 
@@ -199,8 +237,9 @@ press of "Prepare on-device model" fetches it once for every later visit. One li
 sure whether that is allowed"), so it goes to a person without a cloud call and
 without spending budget. One line is decisive but leaves the rule pack below its
 fail threshold (`sd-08`, a thin coat of paint on a detector), so a configured
-build makes a real cloud call for it and shows the clause and remedy the gate
-accepted.
+build makes a real cloud call for it. If the answer holds up, the clause and the
+remedy are added; if it names a severity the pack can fail, the record settles at
+fail and shows `in_cloud` beside the source.
 
 `fixtures/README.md` lists the licence and source of each photo.
 `fixtures/ground-truth.json` is the human answer key written before the model
@@ -232,22 +271,32 @@ app behaves exactly as it does with the remote pack.
 1. a required field is missing or has the wrong type,
 2. the cited clause is not in the pack,
 3. the cited clause is not one this item may cite,
-4. it contradicts the on-device finding about whether the item was present,
+4. it contradicts a device finding the device still trusts about whether the item
+   was present,
 5. the rule pack, run on the cloud's own finding, reaches a different verdict
    than the one the cloud suggested,
 6. it settles an item at pass or fail while the line says the observation was
-   not conclusive.
+   not conclusive,
+7. the line does not carry the finding. The same cross check the device applies
+   to its own reading is applied to the answer: an absence claim the line does
+   not make, or a defect with no severity that the line does not name, is
+   refused.
 
-A sixth guard sits beside them: an answer may not replace a settled on-device
-verdict with a different one. The app never sends a settled item to the cloud, so
-only a test or a caller that asks about one reaches that guard. The app's own
-path runs checks 1 to 6, and every one of them is exercised by
-`tests/verify.test.ts`.
+All seven run in the product path and every one is exercised by
+`tests/verify.test.ts`. A guard sits beside them: an answer may not replace a
+settled on-device verdict. The app never sends a settled item to the cloud, so
+only a caller or a test that asks about one reaches that guard.
 
-Rejections are counted and shown. In the measured run the gate refused 7 of the
-20 cloud answers, every one of them for turning a hedge into a verdict; an hour
-earlier, with the same model and no check against the line, it refused none.
-The sample walkthrough reports the number per walk rather than asserting it.
+When all seven pass, the device narrows the answer from the line where the line
+supports it and the rule pack judges the result. The finding that is recorded is
+the one the verdict came from, so a record cannot carry an answer the pack did
+not use.
+
+Rejections are counted and shown. In the measured run of 2026-11-23 the gate
+refused 7 of the 20 cloud answers, every one of them for turning a hedge into a
+verdict; an hour earlier, with the same model and no check against the line, it
+refused none. The sample walkthrough reports the number per walk rather than
+asserting it.
 
 ## What is measured
 
@@ -288,7 +337,15 @@ confirm what it shows. Numbers and the reproduction notebook are in
   model, so the difference is run to run variation, not the cloud. A single
   measured run is not enough to rank the two paths.
 - A cloud answer can be wrong. That is why the gate exists, why rejections are
-  shown, and why an unresolved item is signed off by a person.
+  shown, and why an unresolved item is signed off by a person. The gate can tell
+  that an answer is inconsistent with the pack and the line; it cannot tell that
+  a painted rim is harmless while the bulb is clear. Oversettling is the failure
+to watch in the cloud path set.
+- A decisive failure the word list misses is still recorded as pass and never
+  reaches the cloud, because the device's settled verdict is not overridden. H03
+  is that case: "cover is off the board" is not in the parser's vocabulary, so the
+  parser reads no defect. The cloud path starts where the device stops, not
+  where it goes wrong.
 - The daily budget is per device, not per building, because there is no server
   in this build.
 

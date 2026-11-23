@@ -1,8 +1,8 @@
 import { extractJsonObject } from "./ai/schema";
 import { trySpend, type KeyValueStore } from "./budget";
 import { judgeNote } from "./rules/evidence";
-import { addDays } from "./rules/judge";
-import { buildCloudPayload, structureNote } from "./rules/structure";
+import { judge, addDays, type Judgement } from "./rules/judge";
+import { buildCloudPayload, structureNote, type CloudReason } from "./rules/structure";
 import { verifyCloudAnswer } from "./rules/verify";
 import type {
   CloudCheck,
@@ -75,8 +75,20 @@ function newId(itemId: string): string {
  * One item through the hybrid boundary:
  *
  *   note -> on-device model (or the local rules) -> deterministic verdict
- *   unknown only -> budgeted cloud call with a typed summary
- *   cloud answer -> on-device verification -> record or rejected_unsupported
+ *   undecided only -> budgeted cloud call with a typed summary
+ *   cloud answer -> seven checks on the device -> the rule pack judges its finding
+ *
+ * Two kinds of item reach the cloud, and both carry a decisive line:
+ *
+ *   - the rule pack read the line and left the item open (`hold: none`), or
+ *   - the device's own reading did not survive the check against the line
+ *     (`hold: misread`), so the device has no finding to decide with.
+ *
+ * An answer that passes every check becomes the finding the record carries and
+ * the rule pack turns it into pass, fail or review. An answer that fails a check
+ * is marked `rejected_unsupported` and left to a person. A line that says the
+ * observation was not conclusive is never sent: a bigger model reading the same
+ * line cannot see more than the inspector did.
  *
  * The photo never leaves the device and is never passed to a model.
  */
@@ -118,27 +130,41 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
 
   deps.onStage?.("judge");
   const decision = judgeNote(item, input.note, finding, now);
-  finding = decision.finding;
-  const judgement = decision.judgement;
+  const draft = decision.finding;
+  const evidence = decision.evidence;
+  let judgement: Judgement = decision.judgement;
   let verdict: Verdict = decision.verdict;
   let source: InferenceSource = "on_device";
   let clauseIds = judgement.clauseIds;
   let latencyMs = deviceLatencyMs;
   const collected: string[] = [...decision.reasons, ...judgement.reasons, ...reasons];
 
+  /* The device's own reading is only a finding if the line can carry it. When
+     the cross check held it as unsupported, the record does not keep it. */
+  const untrustedReading = evidence.hold === "misread";
+  let recordedFinding: Finding | null = untrustedReading ? null : draft;
+  if (untrustedReading) {
+    collected.push("the device's reading of the line did not hold, so no finding from it was recorded");
+  }
+
+  /* A line that says the observer could not tell is why the item is open, and a
+     bigger model reading the same line cannot settle it. Those lines are not
+     sent and the day's budget is kept for the two kinds above. */
+  const lineIsTheReason = evidence.hold === "inconclusive";
+
   let cloud: CloudCheck | null = null;
 
-  /* The device has already handed an item to a person when the line itself is
-     why it cannot be settled. A bigger model reading the same line cannot see
-     more than the inspector did, so those items are not sent and the day's
-     cloud budget is kept for items the rule pack alone leaves open. */
-  const heldByLine = decision.evidence.hold !== "none";
+  if (verdict === "unknown" && draft && deps.classify && !lineIsTheReason) {
+    const askedBecause: CloudReason = untrustedReading ? "untrusted_reading" : "pack_open";
 
-  if (verdict === "unknown" && finding && deps.classify && !heldByLine) {
     if (!deps.online) {
       collected.push("offline: the item waits for a cloud check when the device has signal");
     } else {
-      const payload = buildCloudPayload(item, finding, input.pack);
+      const payload = buildCloudPayload(item, input.pack, {
+        draft,
+        draftTrusted: !untrustedReading,
+        reason: askedBecause,
+      });
       const spend = trySpend(deps.budgetStore, deps.today, input.pack.cloudDailyBudget);
       if (!spend.ok) {
         collected.push(
@@ -164,11 +190,22 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
             error: result.error,
             budgetUsed: spend.state.spent,
             budgetLimit: spend.state.limit,
+            askedBecause,
+            deviceVerdict: verdict,
+            settled: false,
           };
           collected.push(`cloud check failed: ${shortError(result.error)}`);
         } else {
           const extracted = extractJsonObject(result.raw);
-          const verification = verifyCloudAnswer(extracted.value, item, input.pack, verdict, finding, now, input.note);
+          const verification = verifyCloudAnswer(
+            extracted.value,
+            item,
+            input.pack,
+            verdict,
+            untrustedReading ? null : draft,
+            now,
+            input.note,
+          );
           cloud = {
             model: result.model,
             modelFallback: result.modelFallback,
@@ -181,13 +218,30 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
             error: null,
             budgetUsed: spend.state.spent,
             budgetLimit: spend.state.limit,
+            askedBecause,
+            deviceVerdict: verdict,
+            settled: false,
           };
 
-          if (verification.accepted && verification.answer) {
-            verdict = verification.verdictFromRules ?? verdict;
+          if (verification.accepted && verification.answer && verification.finding) {
+            /* The cloud supplied evidence; the rule pack, on this device, turns
+               it into the verdict. */
+            recordedFinding = verification.finding;
+            judgement = judge(item, recordedFinding, now);
+            verdict = judgement.verdict;
             source = "in_cloud";
             clauseIds = verification.answer.clauseId ? [verification.answer.clauseId] : clauseIds;
-            collected.push(`cloud answer accepted: ${verification.answer.remedy}`);
+            for (const reason of verification.reasons) collected.push(reason);
+            if (verdict === "unknown") {
+              collected.push(
+                `cloud answer accepted: ${verification.answer.remedy} the rule pack still leaves this item open`,
+              );
+            } else {
+              collected.push(
+                `cloud answer accepted: the rule pack settled this item at ${verdict}, ${verification.answer.remedy}`,
+              );
+            }
+            cloud.settled = verdict !== "unknown";
           } else {
             source = "rejected_unsupported";
             collected.push("cloud answer rejected, a person has to look at this item");
@@ -199,7 +253,7 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
   }
 
   const reviewRequired = verdict === "unknown" || source === "rejected_unsupported";
-  if (verdict === "unknown" && heldByLine) {
+  if (verdict === "unknown" && lineIsTheReason) {
     collected.push("not sent to the cloud: the line itself is why the device left this item to a person");
   }
   deps.onStage?.("done");
@@ -209,8 +263,8 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
     itemId: item.id,
     label: item.label,
     noteCheck: {
-      action: decision.evidence.action,
-      hold: decision.evidence.hold,
+      action: evidence.action,
+      hold: evidence.hold,
       answerVerdict: decision.answerVerdict,
       reasons: decision.reasons,
     },
@@ -219,7 +273,7 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
     photoBytes: input.photoBytes,
     photoDataUrl: input.photoDataUrl,
     note: input.note.trim(),
-    finding,
+    finding: recordedFinding,
     verdict,
     reasons: collected,
     source,

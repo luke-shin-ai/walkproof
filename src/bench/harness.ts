@@ -65,6 +65,8 @@ export interface ItemResult {
   gate: "accepted" | "refused" | "none";
   gateReasons: string[];
   answer: string | null;
+  /** True when the accepted answer let the rule pack settle pass or fail. */
+  settledByCloud: boolean;
 }
 
 export interface ArmMetrics {
@@ -95,6 +97,10 @@ export interface ArmMetrics {
   refusedOnReview: number;
   captureRate: number | null;
   wrongSettled: number;
+  /** Items an accepted cloud answer let the rule pack settle. */
+  settledByCloud: number;
+  /** Of those, how many agree with the human key. */
+  settledByCloudCorrect: number;
   notes: string[];
 }
 
@@ -193,6 +199,8 @@ function metricsOf(arm: BenchArm, items: ItemResult[], notes: string[]): ArmMetr
     refusedOnReview,
     captureRate: answeredOnReview ? Math.round((refusedOnReview / answeredOnReview) * 100) : null,
     wrongSettled: items.filter((entry) => entry.gate === "accepted" && entry.recorded !== entry.expected).length,
+    settledByCloud: items.filter((entry) => entry.settledByCloud).length,
+    settledByCloudCorrect: items.filter((entry) => entry.settledByCloud && entry.recorded === entry.expected).length,
     notes,
   };
 }
@@ -233,6 +241,7 @@ export async function runDeviceArm(deps: BenchDeps, scenarios = BENCH_SCENARIOS)
       gate: "none",
       gateReasons: [],
       answer: finding ? `${finding.targetPresent ? "present" : "absent"} / ${finding.defectType} / ${finding.severity}${finding.obscured ? " / obscured" : ""}` : null,
+      settledByCloud: false,
     });
   }
   return { metrics: metricsOf("device", items, []), items };
@@ -348,6 +357,7 @@ export async function runHybridArm(deps: BenchDeps, scenarios = BENCH_SCENARIOS)
       gate: observation.cloud ? (observation.cloud.accepted ? "accepted" : "refused") : "none",
       gateReasons: observation.cloud?.reasons ?? [],
       answer: observation.cloud?.answer ? `${observation.cloud.answer.defectType} / ${observation.cloud.answer.severity} / ${observation.cloud.answer.suggestedVerdict} / ${observation.cloud.answer.clauseId}` : null,
+      settledByCloud: observation.cloud?.settled ?? false,
     });
   }
 
@@ -396,6 +406,7 @@ export async function runCloudOnlyArm(deps: BenchDeps, scenarios = BENCH_SCENARI
         gate: "none",
         gateReasons: [],
         answer: null,
+        settledByCloud: false,
       });
       continue;
     }
@@ -459,6 +470,7 @@ export async function runCloudOnlyArm(deps: BenchDeps, scenarios = BENCH_SCENARI
       gate,
       gateReasons,
       answer: answerText,
+      settledByCloud: gate === "accepted" && verdict !== "unknown",
     });
   }
 
