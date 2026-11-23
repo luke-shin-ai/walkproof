@@ -271,12 +271,14 @@ function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
   </article>`;
 }
 
-function renderResults(results: { arms: ArmMetrics[]; items: Record<string, ArmResult["items"]>; environment: Record<string, unknown>; cloudModel?: string }): void {
+function renderResults(results: { arms: ArmMetrics[]; items: Record<string, ArmResult["items"]>; environment: Record<string, unknown>; cloudModel?: string; set?: string }): void {
   if (!liveEl) return;
   const env = results.environment;
+  const setLabel = results.set === "open" ? "the ten cloud path notes" : results.set === "heldout" ? "the ten held out notes" : "the forty observations";
   liveEl.innerHTML = `
     <section class="card">
       <h2>Run</h2>
+      <p class="small">Set: ${setLabel}.</p>
       <p class="small">${String(env.userAgent ?? "")} / cores ${String(env.cores ?? "?")} / memory ${String(env.deviceMemoryGB ?? "?")} GB / WebGPU ${String(env.webgpu ?? "?")} / device model ${String(env.deviceAvailability ?? "?")}</p>
       <p class="small">cloud model ${String(results.cloudModel ?? "?")}</p>
     </section>
@@ -347,24 +349,25 @@ async function run(options: Options): Promise<void> {
       const result = await runDeviceArm(deps, walk);
       arms.push(result.metrics);
       items.device = result.items;
-      renderResults({ arms, items, environment: env, cloudModel: options.model });
+      renderResults({ arms, items, environment: env, cloudModel: options.model, set: options.set });
     }
     if (options.hybrid) {
       const result = await runHybridArm(deps, walk);
       arms.push(result.metrics);
       items.hybrid = result.items;
-      renderResults({ arms, items, environment: env, cloudModel: options.model });
+      renderResults({ arms, items, environment: env, cloudModel: options.model, set: options.set });
     }
-    if (options.cloud) {
+    if (options.cloud && options.set === "main") {
       const result = await runCloudOnlyArm(deps, BENCH_SCENARIOS.slice(0, options.cloudOnly));
       arms.push(result.metrics);
       items.cloud = result.items;
-      renderResults({ arms, items, environment: env, cloudModel: options.model });
+      renderResults({ arms, items, environment: env, cloudModel: options.model, set: options.set });
     }
 
     state.results = {
       generatedAt: new Date().toISOString(),
       cloudModel: options.model,
+      set: options.set,
       environment: env,
       arms,
       items,

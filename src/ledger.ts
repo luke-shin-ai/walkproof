@@ -13,6 +13,8 @@ export interface LedgerRow {
   photoBytes: number;
   cloudModel: string | null;
   cloudAccepted: boolean | null;
+  /** True when the accepted answer let the rule pack settle this item. */
+  cloudSettled: boolean | null;
   reasons: string;
   createdAt: string;
 }
@@ -31,6 +33,7 @@ export function ledgerRows(observations: Observation[]): LedgerRow[] {
     photoBytes: observation.photoBytes,
     cloudModel: observation.cloud ? observation.cloud.model : null,
     cloudAccepted: observation.cloud ? observation.cloud.accepted : null,
+    cloudSettled: observation.cloud ? observation.cloud.settled === true : null,
     reasons: observation.reasons.join("; "),
     createdAt: observation.createdAt,
   }));
@@ -56,6 +59,7 @@ export function ledgerCsv(observations: Observation[]): string {
     "photo_bytes",
     "cloud_model",
     "cloud_accepted",
+    "cloud_settled",
     "reasons",
     "created_at",
   ];
@@ -75,6 +79,7 @@ export function ledgerCsv(observations: Observation[]): string {
         row.photoBytes,
         row.cloudModel,
         row.cloudAccepted,
+        row.cloudSettled,
         row.reasons,
         row.createdAt,
       ]

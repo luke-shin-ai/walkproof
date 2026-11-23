@@ -211,7 +211,7 @@ person".
 npm install
 cp .env.example .env      # Firebase web app values, or leave empty for local only
 npm run dev
-npm test                  # 110 tests
+npm test                  # 108 tests
 npm run build             # type check, then the Vite build
 npm run check:ai-tells    # fails on machine looking punctuation and on secrets
 
