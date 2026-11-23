@@ -7,6 +7,25 @@ https://luke-shin-ai.github.io/walkproof/bench/ .
 |---|---|---|
 | `results-kaggle-2026-11-23.json` | Kaggle Notebooks free CPU session (4 cores, 30 GiB, Chrome on Linux) | the forty observations, all three paths |
 
+## The run of 2026-11-23
+
+| metric | on-device | hybrid | cloud only |
+|---|---|---|---|
+| items | 40 | 40 | 6 |
+| total | 592.9 s | 605.6 s | 17.9 s |
+| median | 14,950 ms | 15,182 ms | 3,072 ms |
+| p90 | 15,395 ms | 16,729 ms | 3,637 ms |
+| cloud calls | 0 | 11 | 6 |
+| photo bytes to cloud | 0 | 0 | 535,758 |
+| request bytes to cloud | 0 | 4,167 | 718,749 |
+| settled without cloud | 100% | 73% | 0% |
+| agreement with the human key | 60% | 63% | 6 of 6 |
+| gate refusals | n/a | 0 | 0 |
+
+The cloud arm is six items because the free tier allows 20 requests per model
+per day, and `gemini-4-hydrogen` had already spent its day. The hybrid and the
+on-device arm ran with `gemini-3.5-flash-lite`, the model the app falls back to.
+
 ## What is measured
 
 Forty observations are built from the ten checklist items in the shipped rule

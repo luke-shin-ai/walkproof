@@ -12,6 +12,32 @@ path uses Gemini Nano through `firebase/ai`; the cloud path uses
 `gemini-4-hydrogen` through the same SDK, with the same finding schema plus a
 clause id and a remedy.
 
+- Live app: https://luke-shin-ai.github.io/walkproof/
+- Forty observation measurement: https://luke-shin-ai.github.io/walkproof/bench/
+
+## Measured on 2026-11-23
+
+Forty observations (ten checklist items, four each: pass, fail, borderline,
+trap) were pushed through three paths on a free 4 core CPU session in Chrome
+158, with Gemini Nano running on the CPU. Raw result:
+`benchmarks/results-kaggle-2026-11-23.json`.
+
+| | on-device | hybrid | cloud only (6 items) |
+|---|---|---|---|
+| total time | 592.9 s | 605.6 s | 17.9 s |
+| median latency | 14,950 ms | 15,182 ms | 3,072 ms |
+| cloud calls | 0 | 11 | 6 |
+| photo bytes to the cloud | 0 | 0 | 535,758 |
+| settled without the cloud | 100% | 73% | 0% |
+| verdicts pass / fail / review | 16 / 12 / 12 | 14 / 17 / 9 | 2 / 2 / 2 |
+
+The hybrid sent eleven typed summaries (4,167 bytes in total) where the cloud
+only baseline sent a photo and the raw line every time. A forty item cloud only
+walk needs forty calls, which the free tier (20 requests per model per day) does
+not allow in one day. The on-device model read the line differently from the
+human answer key in 16 of 40 cases, which is the work D5 has to do; the numbers
+above are what happened, not a target.
+
 ## Status
 
 D1 to D3 of the build plan are in place (2026-11-23).
@@ -70,9 +96,12 @@ person".
 npm install
 cp .env.example .env      # Firebase web app values, or leave empty for local only
 npm run dev
-npm test                  # 54 tests
+npm test                  # 64 tests
 npm run build             # type check, then the Vite build
 npm run check:ai-tells    # fails on machine looking punctuation and on secrets
+
+npm run build:pages       # public build with no env file, so no key can be baked in
+npm run check:pages       # fails if the public build carries a key or an identifier
 ```
 
 With no Firebase values the app still runs: the built-in pack is used, notes are
