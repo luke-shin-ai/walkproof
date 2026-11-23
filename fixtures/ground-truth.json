@@ -1,0 +1,70 @@
+{
+  "annotated_by": "human review before the model ran, 2026-11-23",
+  "items": [
+    {
+      "id": "extinguisher",
+      "file": "extinguisher.jpg",
+      "prompt_item": "Fire extinguisher in its cabinet",
+      "expects": "target_visible",
+      "expected": {
+        "target_present": true,
+        "defect_type": "none",
+        "severity": "none",
+        "obscured": false
+      },
+      "note": "Red cylinder behind a glass fronted white cabinet, inspection tag visible, nothing wrong."
+    },
+    {
+      "id": "exit-sign",
+      "file": "exit-sign.jpg",
+      "prompt_item": "Illuminated exit sign above the door",
+      "expects": "target_visible",
+      "expected": {
+        "target_present": true,
+        "defect_type": "none",
+        "severity": "none",
+        "obscured": false
+      },
+      "note": "Green running man sign lit above a white door with a closer arm."
+    },
+    {
+      "id": "panel",
+      "file": "panel.jpg",
+      "prompt_item": "Distribution board closed and covered",
+      "expects": "target_clear",
+      "expected": {
+        "target_present": true,
+        "defect_type": "exposed_parts",
+        "severity": "high",
+        "obscured": false
+      },
+      "note": "Board with the front cover missing, breakers and loose conductors exposed."
+    },
+    {
+      "id": "crack",
+      "file": "crack.jpg",
+      "prompt_item": "Wall and soffit surfaces free of cracks",
+      "expects": "no_defect",
+      "expected": {
+        "target_present": true,
+        "defect_type": "crack",
+        "severity": "medium",
+        "obscured": false
+      },
+      "note": "Vertical and stepped cracks with spalled face and rust stained reinforcement."
+    },
+    {
+      "id": "extinguisher-cart",
+      "file": "extinguisher-cart.jpg",
+      "prompt_item": "Fire extinguisher in its cabinet",
+      "expects": "target_visible",
+      "expected": {
+        "target_present": true,
+        "defect_type": "other",
+        "severity": "medium",
+        "obscured": false
+      },
+      "note": "Extinguisher present but on an outdoor cart, not in the designated wall cabinet."
+    }
+  ]
+}
