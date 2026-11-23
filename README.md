@@ -9,7 +9,8 @@ enter the record.
 
 Built for the Firebase AI Logic hybrid hackathon (Web/Chrome). The on-device
 path uses Gemini Nano through `firebase/ai`; the cloud path uses
-`gemini-4-hydrogen` through the same SDK and the same schema.
+`gemini-4-hydrogen` through the same SDK, with the same finding schema plus a
+clause id and a remedy.
 
 ## Status
 
