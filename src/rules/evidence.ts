@@ -162,7 +162,6 @@ export function judgeNote(item: InspectionItem, note: string, finding: Finding |
       ...judged,
       verdict,
       fixBy: verdict === "fail" ? judged.fixBy : null,
-      reasons: [...judged.reasons, ...reasons],
     },
     evidence,
     answerVerdict,

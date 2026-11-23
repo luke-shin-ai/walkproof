@@ -67,6 +67,8 @@ interface GateSample {
   itemId: string;
   label: string;
   answer: Record<string, unknown>;
+  /** The inspector's line, when the sample is about what the line allows. */
+  note?: string;
 }
 
 /**
@@ -138,12 +140,29 @@ const GATE_SAMPLES: GateSample[] = [
       suggestedVerdict: "fail",
     },
   },
+  {
+    id: "open-line",
+    itemId: "sp-10",
+    label: "A verdict on a line the inspector left open",
+    note: "Head looks painted, not sure whether that is allowed.",
+    answer: {
+      targetPresent: true,
+      targetName: "sprinkler head",
+      defectType: "painted_over",
+      severity: "medium",
+      obscured: false,
+      note: "paint on the head",
+      clauseId: "SP-10",
+      remedy: "Have the head replaced and tested.",
+      suggestedVerdict: "fail",
+    },
+  },
 ];
 
 function checkGateSample(sample: GateSample): void {
   const item = state.pack.items.find((entry) => entry.id === sample.itemId);
   if (!item) return;
-  const verification = verifyCloudAnswer(sample.answer, item, state.pack, "unknown", null, new Date());
+  const verification = verifyCloudAnswer(sample.answer, item, state.pack, "unknown", null, new Date(), sample.note ?? "");
   state.gate[sample.id] = { accepted: verification.accepted, reasons: verification.reasons };
   render();
 }
@@ -466,7 +485,7 @@ function gateSection(): string {
     <section class="card gate">
       <div class="section-head">
         <h2>Try the verification gate</h2>
-        <p>Four answers a cloud model could send back. The device checks each one before it can change a record, with no network and no key.</p>
+        <p>Five answers a cloud model could send back. The device checks each one before it can change a record, with no network and no key, including one that settles a line the inspector left open.</p>
       </div>
       <div class="scroll">
         <table class="gate-table">
