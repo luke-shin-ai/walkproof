@@ -284,6 +284,10 @@ def main():
 
         open_set = None
         if OPEN_SET:
+            # The forty item arms and this set would share one meter of 20 calls,
+            # and a spent meter measures the meter rather than the product. The
+            # meter is cleared here so this set starts from a full day.
+            browser.execute_script("try { localStorage.removeItem('walkproof.cloudBudget.v1'); } catch (e) {}")
             opened = run_arms(browser, device=True, hybrid=True, cloud=False, count=CLOUD_ONLY, set_name="open")
             print("cloud path arms done", flush=True)
             open_set = {
