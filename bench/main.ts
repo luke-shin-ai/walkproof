@@ -221,6 +221,21 @@ function checkText(evidence: string | undefined): string {
   return "kept";
 }
 
+const ARM_LABELS: Record<string, string> = {
+  device: "On-device path",
+  hybrid: "WalkProof hybrid",
+  cloud: "Cloud only baseline",
+  device_rerun: "On-device path, second pass",
+  hybrid_rerun: "WalkProof hybrid, second pass",
+  holdout: "Ten held out notes, on-device",
+  "open-device": "Cloud path notes, on-device",
+  "open-hybrid": "Cloud path notes, hybrid",
+};
+
+function armLabel(arm: string): string {
+  return ARM_LABELS[arm] ?? arm;
+}
+
 function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
   const rows = items
     .map(
@@ -240,7 +255,7 @@ function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
     )
     .join("");
   return `<article class="card arm">
-    <h2>${metrics.arm === "device" ? "On-device path" : metrics.arm === "hybrid" ? "WalkProof hybrid" : "Cloud only baseline"}</h2>
+    <h2>${armLabel(metrics.arm)}</h2>
     <div class="metrics">
       ${metricRow("items", String(metrics.items))}
       ${metricRow("total", `${(metrics.totalMs / 1000).toFixed(1)} s`)}
@@ -449,11 +464,23 @@ async function loadRecorded(): Promise<void> {
       items?: Record<string, ArmResult["items"]>;
       environment?: Record<string, unknown>;
       cloudModel?: string;
+      holdout?: { metrics?: ArmMetrics; items?: ArmResult["items"] };
+      open?: { metrics?: Record<string, ArmMetrics>; items?: Record<string, ArmResult["items"]> };
     };
     if (!data.arms || !data.items) throw new Error("no arms in the file");
+    const cards: { metrics: ArmMetrics; items: ArmResult["items"] }[] = (data.arms ?? []).map((metrics) => ({
+      metrics,
+      items: data.items?.[metrics.arm] ?? [],
+    }));
+    if (data.holdout?.metrics) {
+      cards.push({ metrics: { ...data.holdout.metrics, arm: "holdout" }, items: data.holdout.items ?? [] });
+    }
+    for (const [name, metrics] of Object.entries(data.open?.metrics ?? {})) {
+      cards.push({ metrics: { ...metrics, arm: `open-${name}` }, items: data.open?.items?.[name] ?? [] });
+    }
     note.textContent = `Recorded ${String(data.environment?.capturedAt ?? "")} with ${String(data.cloudModel ?? "")}.`;
     target.innerHTML = `<section class="card"><h2>Run</h2><p class="small">${String(data.environment?.userAgent ?? "")} / cores ${String(data.environment?.cores ?? "?")} / memory ${String(data.environment?.deviceMemoryGB ?? "?")} GB / WebGPU ${String(data.environment?.webgpu ?? "?")} / device model ${String(data.environment?.deviceAvailability ?? "?")}</p></section>
-      ${(data.arms ?? []).map((metrics) => armCard(metrics, data.items?.[metrics.arm] ?? [])).join("")}`;
+      ${cards.map((card) => armCard(card.metrics, card.items)).join("")}`;
   } catch (error) {
     note.textContent = `No recorded run beside this page yet (${(error as Error).message}).`;
   }

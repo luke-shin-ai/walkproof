@@ -1,0 +1,234 @@
+# WalkProof D6 session output, 2026-11-25
+#
+# Session: Kaggle Notebooks free CPU session, 4 cores, 32 GB, no GPU.
+# Chrome 158.0.8127.88 on Linux under Xvfb. Cloud model gemini-4-hydrogen.
+# Host: Kaggle Notebooks free CPU session, Chrome on Linux under Xvfb
+# Result file: benchmarks/results-kaggle-2026-11-25.json, written by the session at
+# 2026-11-24T22:59:02.475Z.
+#
+# The layout, variation, arm and set summary lines below are the session's own lines.
+# The per item table after them is rebuilt from the result file the session wrote,
+# in the same shape the runner prints, because the log view could not be exported.
+
+## Layout readings
+LAYOUT {"clientW": 1425, "console": [], "consoleSevere": 0, "innerH": 757, "innerW": 1440, "overflow": 0, "scrollW": 1425, "tag": "desktop", "text": "W\nWalkProof\n\nMonthly building walkthrough / photos and records stay on the device\n\npack 2026.11.23-1\nbuilt-in\ndevice model: press prepare\ncloud: gemini-4-hydrogen (not configured)\nonline\nBUILDING\nTYPE", "title": "WalkProof / building safety walkthrough"}
+LAYOUT {"clientW": 485, "console": [], "consoleSevere": 0, "innerH": 701, "innerW": 500, "overflow": 0, "scrollW": 485, "tag": "mobile", "text": "W\nWalkProof\npack 2026.11.23-1\nbuilt-in\ndevice model: press prepare\ncloud: gemini-4-hydrogen (not configured)\nonline\nBUILDING\nTYPE\nretail\noffice\nchildcare\nschool\nINSPECTOR\n\nPhoto and note stay on this ", "title": "WalkProof / building safety walkthrough"}
+LAYOUT {"clientW": 1425, "console": [], "consoleSevere": 0, "innerH": 757, "innerW": 1440, "overflow": 0, "scrollW": 1425, "tag": "bench-desktop", "text": "WalkProof\nForty observations, two recorded paths\n\nThe same forty notes and photos go through the on-device path and the shipped hybrid. A cloud only baseline was run once on six items and is kept apar", "title": "WalkProof / 40 item measurement"}
+LAYOUT {"clientW": 485, "console": [], "consoleSevere": 0, "innerH": 701, "innerW": 500, "overflow": 0, "scrollW": 485, "tag": "bench-mobile", "text": "WalkProof\nForty observations, two recorded paths\n\nThe same forty notes and photos go through the on-device path and the shipped hybrid. A cloud only baseline was run once on six items and is kept apar", "title": "WalkProof / 40 item measurement"}
+
+## Variation between the two passes
+VARIATION device 7 of 40 ['S01', 'S06', 'S10', 'S21', 'S22', 'S25', 'S34']
+VARIATION hybrid 2 of 40 ['S22', 'S38']
+
+## Arm metrics
+METRICS_BEGIN
+{"agreed": 34, "agreement": 85, "amendedByNote": 3, "answerAgreed": 27, "answerAgreement": 68, "arm": "device", "captureRate": null, "cloudCalls": 0, "cloudErrors": 0, "cloudPhotoBytes": 0, "cloudRequestBytes": 0, "cloudSkipped": 0, "decidedWithoutCloud": 40, "heldByNote": 22, "items": 40, "medianMs": 15321, "notes": [], "offlineShare": 100, "onDeviceStructuring": 40, "p90Ms": 15862, "refused": 0, "refusedOnReview": 0, "reviewExpected": 20, "settledByCloud": 0, "settledByCloudCorrect": 0, "settledOnReview": 0, "totalMs": 613481, "verdicts": {"fail": 7, "pass": 7, "review": 26}, "wrongSettled": 0}
+{"agreed": 40, "agreement": 100, "amendedByNote": 4, "answerAgreed": 28, "answerAgreement": 70, "arm": "hybrid", "captureRate": 100, "cloudCalls": 2, "cloudErrors": 0, "cloudPhotoBytes": 0, "cloudRequestBytes": 943, "cloudSkipped": 0, "decidedWithoutCloud": 38, "heldByNote": 20, "items": 40, "medianMs": 15277, "notes": [], "offlineShare": 95, "onDeviceStructuring": 40, "p90Ms": 15886, "refused": 1, "refusedOnReview": 1, "reviewExpected": 20, "settledByCloud": 1, "settledByCloudCorrect": 1, "settledOnReview": 0, "totalMs": 615664, "verdicts": {"fail": 10, "pass": 10, "review": 20}, "wrongSettled": 0}
+{"agreed": 37, "agreement": 93, "amendedByNote": 4, "answerAgreed": 26, "answerAgreement": 65, "arm": "device_rerun", "captureRate": null, "cloudCalls": 0, "cloudErrors": 0, "cloudPhotoBytes": 0, "cloudRequestBytes": 0, "cloudSkipped": 0, "decidedWithoutCloud": 40, "heldByNote": 20, "items": 40, "medianMs": 15412, "notes": [], "offlineShare": 100, "onDeviceStructuring": 39, "p90Ms": 16049, "refused": 0, "refusedOnReview": 0, "reviewExpected": 20, "settledByCloud": 0, "settledByCloudCorrect": 0, "settledOnReview": 0, "totalMs": 609599, "verdicts": {"fail": 9, "pass": 8, "review": 23}, "wrongSettled": 0}
+{"agreed": 38, "agreement": 95, "amendedByNote": 3, "answerAgreed": 24, "answerAgreement": 60, "arm": "hybrid_rerun", "captureRate": 100, "cloudCalls": 5, "cloudErrors": 1, "cloudPhotoBytes": 0, "cloudRequestBytes": 2435, "cloudSkipped": 0, "decidedWithoutCloud": 35, "heldByNote": 20, "items": 40, "medianMs": 15542, "notes": [], "offlineShare": 88, "onDeviceStructuring": 39, "p90Ms": 18312, "refused": 3, "refusedOnReview": 1, "reviewExpected": 20, "settledByCloud": 2, "settledByCloudCorrect": 2, "settledOnReview": 0, "totalMs": 664655, "verdicts": {"fail": 8, "pass": 10, "review": 22}, "wrongSettled": 0}
+{"agreed": 8, "agreement": 80, "amendedByNote": 0, "answerAgreed": 7, "answerAgreement": 70, "arm": "holdout", "captureRate": 0, "cloudCalls": 0, "cloudErrors": 0, "cloudPhotoBytes": 0, "cloudRequestBytes": 0, "cloudSkipped": 0, "decidedWithoutCloud": 10, "heldByNote": 6, "items": 10, "medianMs": 15418, "notes": [], "offlineShare": 100, "onDeviceStructuring": 10, "p90Ms": 15982, "refused": 0, "refusedOnReview": 0, "reviewExpected": 7, "settledByCloud": 0, "settledByCloudCorrect": 0, "settledOnReview": 1, "totalMs": 154703, "verdicts": {"fail": 2, "pass": 1, "review": 7}, "wrongSettled": 0}
+{"agreed": 7, "agreement": 70, "amendedByNote": 1, "answerAgreed": 7, "answerAgreement": 70, "arm": "open-device", "captureRate": null, "cloudCalls": 0, "cloudErrors": 0, "cloudPhotoBytes": 0, "cloudRequestBytes": 0, "cloudSkipped": 0, "decidedWithoutCloud": 10, "heldByNote": 0, "items": 10, "medianMs": 15613, "notes": [], "offlineShare": 100, "onDeviceStructuring": 10, "p90Ms": 16230, "refused": 0, "refusedOnReview": 0, "reviewExpected": 2, "settledByCloud": 0, "settledByCloudCorrect": 0, "settledOnReview": 0, "totalMs": 156777, "verdicts": {"fail": 5, "pass": 2, "review": 3}, "wrongSettled": 0}
+{"agreed": 10, "agreement": 100, "amendedByNote": 3, "answerAgreed": 6, "answerAgreement": 60, "arm": "open-hybrid", "captureRate": null, "cloudCalls": 6, "cloudErrors": 0, "cloudPhotoBytes": 0, "cloudRequestBytes": 2904, "cloudSkipped": 0, "decidedWithoutCloud": 4, "heldByNote": 0, "items": 10, "medianMs": 20559, "notes": [], "offlineShare": 40, "onDeviceStructuring": 10, "p90Ms": 24335, "refused": 0, "refusedOnReview": 0, "reviewExpected": 2, "settledByCloud": 4, "settledByCloudCorrect": 4, "settledOnReview": 0, "totalMs": 198818, "verdicts": {"fail": 8, "pass": 0, "review": 2}, "wrongSettled": 0}
+METRICS_END
+
+## Per item table
+ITEMS_BEGIN
+ITEM {"arm": "device", "id": "S01", "expected": "pass", "answer": "unknown", "recorded": "review", "check": "held_misread", "gate": "none", "ms": 15449}
+ITEM {"arm": "device", "id": "S02", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 14847}
+ITEM {"arm": "device", "id": "S03", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15266}
+ITEM {"arm": "device", "id": "S04", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15463}
+ITEM {"arm": "device", "id": "S05", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14577}
+ITEM {"arm": "device", "id": "S06", "expected": "fail", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "none", "ms": 15326}
+ITEM {"arm": "device", "id": "S07", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15842}
+ITEM {"arm": "device", "id": "S08", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 19395}
+ITEM {"arm": "device", "id": "S09", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 15186}
+ITEM {"arm": "device", "id": "S10", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15178}
+ITEM {"arm": "device", "id": "S11", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15489}
+ITEM {"arm": "device", "id": "S12", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15998}
+ITEM {"arm": "device", "id": "S13", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14351}
+ITEM {"arm": "device", "id": "S14", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15260}
+ITEM {"arm": "device", "id": "S15", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15749}
+ITEM {"arm": "device", "id": "S16", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16144}
+ITEM {"arm": "device", "id": "S17", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14619}
+ITEM {"arm": "device", "id": "S18", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "amended", "gate": "none", "ms": 15523}
+ITEM {"arm": "device", "id": "S19", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15274}
+ITEM {"arm": "device", "id": "S20", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16526}
+ITEM {"arm": "device", "id": "S21", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14755}
+ITEM {"arm": "device", "id": "S22", "expected": "fail", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "none", "ms": 14951}
+ITEM {"arm": "device", "id": "S23", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15692}
+ITEM {"arm": "device", "id": "S24", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15862}
+ITEM {"arm": "device", "id": "S25", "expected": "pass", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "none", "ms": 14288}
+ITEM {"arm": "device", "id": "S26", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "amended", "gate": "none", "ms": 15629}
+ITEM {"arm": "device", "id": "S27", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_misread", "gate": "none", "ms": 15423}
+ITEM {"arm": "device", "id": "S28", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15396}
+ITEM {"arm": "device", "id": "S29", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 15078}
+ITEM {"arm": "device", "id": "S30", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "amended", "gate": "none", "ms": 14633}
+ITEM {"arm": "device", "id": "S31", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15714}
+ITEM {"arm": "device", "id": "S32", "expected": "review", "answer": "pass", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15316}
+ITEM {"arm": "device", "id": "S33", "expected": "pass", "answer": "unknown", "recorded": "review", "check": "held_misread", "gate": "none", "ms": 14307}
+ITEM {"arm": "device", "id": "S34", "expected": "fail", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "none", "ms": 14723}
+ITEM {"arm": "device", "id": "S35", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15601}
+ITEM {"arm": "device", "id": "S36", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15313}
+ITEM {"arm": "device", "id": "S37", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14395}
+ITEM {"arm": "device", "id": "S38", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 13942}
+ITEM {"arm": "device", "id": "S39", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15480}
+ITEM {"arm": "device", "id": "S40", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15521}
+ITEM {"arm": "hybrid", "id": "S01", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14746}
+ITEM {"arm": "hybrid", "id": "S02", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 14910}
+ITEM {"arm": "hybrid", "id": "S03", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15165}
+ITEM {"arm": "hybrid", "id": "S04", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15535}
+ITEM {"arm": "hybrid", "id": "S05", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14772}
+ITEM {"arm": "hybrid", "id": "S06", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15427}
+ITEM {"arm": "hybrid", "id": "S07", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15754}
+ITEM {"arm": "hybrid", "id": "S08", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16248}
+ITEM {"arm": "hybrid", "id": "S09", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14405}
+ITEM {"arm": "hybrid", "id": "S10", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15229}
+ITEM {"arm": "hybrid", "id": "S11", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16841}
+ITEM {"arm": "hybrid", "id": "S12", "expected": "review", "answer": "pass", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15886}
+ITEM {"arm": "hybrid", "id": "S13", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 15182}
+ITEM {"arm": "hybrid", "id": "S14", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15163}
+ITEM {"arm": "hybrid", "id": "S15", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15476}
+ITEM {"arm": "hybrid", "id": "S16", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15732}
+ITEM {"arm": "hybrid", "id": "S17", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14853}
+ITEM {"arm": "hybrid", "id": "S18", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15880}
+ITEM {"arm": "hybrid", "id": "S19", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15795}
+ITEM {"arm": "hybrid", "id": "S20", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15712}
+ITEM {"arm": "hybrid", "id": "S21", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14699}
+ITEM {"arm": "hybrid", "id": "S22", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "held_misread", "gate": "accepted", "ms": 17812}
+ITEM {"arm": "hybrid", "id": "S23", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15600}
+ITEM {"arm": "hybrid", "id": "S24", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15838}
+ITEM {"arm": "hybrid", "id": "S25", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14244}
+ITEM {"arm": "hybrid", "id": "S26", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "amended", "gate": "none", "ms": 14921}
+ITEM {"arm": "hybrid", "id": "S27", "expected": "review", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "refused", "ms": 19809}
+ITEM {"arm": "hybrid", "id": "S28", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15299}
+ITEM {"arm": "hybrid", "id": "S29", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14667}
+ITEM {"arm": "hybrid", "id": "S30", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "amended", "gate": "none", "ms": 14545}
+ITEM {"arm": "hybrid", "id": "S31", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15722}
+ITEM {"arm": "hybrid", "id": "S32", "expected": "review", "answer": "pass", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15255}
+ITEM {"arm": "hybrid", "id": "S33", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 13942}
+ITEM {"arm": "hybrid", "id": "S34", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "amended", "gate": "none", "ms": 15024}
+ITEM {"arm": "hybrid", "id": "S35", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15530}
+ITEM {"arm": "hybrid", "id": "S36", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15353}
+ITEM {"arm": "hybrid", "id": "S37", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14387}
+ITEM {"arm": "hybrid", "id": "S38", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "amended", "gate": "none", "ms": 14050}
+ITEM {"arm": "hybrid", "id": "S39", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 14816}
+ITEM {"arm": "hybrid", "id": "S40", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15440}
+ITEM {"arm": "device_rerun", "id": "S01", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14612}
+ITEM {"arm": "device_rerun", "id": "S02", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 14720}
+ITEM {"arm": "device_rerun", "id": "S03", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 14844}
+ITEM {"arm": "device_rerun", "id": "S04", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15665}
+ITEM {"arm": "device_rerun", "id": "S05", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14767}
+ITEM {"arm": "device_rerun", "id": "S06", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15540}
+ITEM {"arm": "device_rerun", "id": "S07", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15748}
+ITEM {"arm": "device_rerun", "id": "S08", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16049}
+ITEM {"arm": "device_rerun", "id": "S09", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14540}
+ITEM {"arm": "device_rerun", "id": "S10", "expected": "fail", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "none", "ms": 15958}
+ITEM {"arm": "device_rerun", "id": "S11", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15586}
+ITEM {"arm": "device_rerun", "id": "S12", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 659}
+ITEM {"arm": "device_rerun", "id": "S13", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 23462}
+ITEM {"arm": "device_rerun", "id": "S14", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 17702}
+ITEM {"arm": "device_rerun", "id": "S15", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15642}
+ITEM {"arm": "device_rerun", "id": "S16", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16005}
+ITEM {"arm": "device_rerun", "id": "S17", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 15043}
+ITEM {"arm": "device_rerun", "id": "S18", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "amended", "gate": "none", "ms": 15287}
+ITEM {"arm": "device_rerun", "id": "S19", "expected": "review", "answer": "pass", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15415}
+ITEM {"arm": "device_rerun", "id": "S20", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16496}
+ITEM {"arm": "device_rerun", "id": "S21", "expected": "pass", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "none", "ms": 14952}
+ITEM {"arm": "device_rerun", "id": "S22", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 14241}
+ITEM {"arm": "device_rerun", "id": "S23", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16949}
+ITEM {"arm": "device_rerun", "id": "S24", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15973}
+ITEM {"arm": "device_rerun", "id": "S25", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14551}
+ITEM {"arm": "device_rerun", "id": "S26", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "amended", "gate": "none", "ms": 15242}
+ITEM {"arm": "device_rerun", "id": "S27", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_misread", "gate": "none", "ms": 15408}
+ITEM {"arm": "device_rerun", "id": "S28", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15615}
+ITEM {"arm": "device_rerun", "id": "S29", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 15094}
+ITEM {"arm": "device_rerun", "id": "S30", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "amended", "gate": "none", "ms": 14937}
+ITEM {"arm": "device_rerun", "id": "S31", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15941}
+ITEM {"arm": "device_rerun", "id": "S32", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15497}
+ITEM {"arm": "device_rerun", "id": "S33", "expected": "pass", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "none", "ms": 14650}
+ITEM {"arm": "device_rerun", "id": "S34", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15346}
+ITEM {"arm": "device_rerun", "id": "S35", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15867}
+ITEM {"arm": "device_rerun", "id": "S36", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15774}
+ITEM {"arm": "device_rerun", "id": "S37", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14625}
+ITEM {"arm": "device_rerun", "id": "S38", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "amended", "gate": "none", "ms": 14352}
+ITEM {"arm": "device_rerun", "id": "S39", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15128}
+ITEM {"arm": "device_rerun", "id": "S40", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15717}
+ITEM {"arm": "hybrid_rerun", "id": "S01", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14965}
+ITEM {"arm": "hybrid_rerun", "id": "S02", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 14987}
+ITEM {"arm": "hybrid_rerun", "id": "S03", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15512}
+ITEM {"arm": "hybrid_rerun", "id": "S04", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15974}
+ITEM {"arm": "hybrid_rerun", "id": "S05", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14976}
+ITEM {"arm": "hybrid_rerun", "id": "S06", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15584}
+ITEM {"arm": "hybrid_rerun", "id": "S07", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15673}
+ITEM {"arm": "hybrid_rerun", "id": "S08", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16277}
+ITEM {"arm": "hybrid_rerun", "id": "S09", "expected": "pass", "answer": "unknown", "recorded": "pass", "check": "kept", "gate": "accepted", "ms": 18820}
+ITEM {"arm": "hybrid_rerun", "id": "S10", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 14898}
+ITEM {"arm": "hybrid_rerun", "id": "S11", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15469}
+ITEM {"arm": "hybrid_rerun", "id": "S12", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15969}
+ITEM {"arm": "hybrid_rerun", "id": "S13", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 15004}
+ITEM {"arm": "hybrid_rerun", "id": "S14", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15206}
+ITEM {"arm": "hybrid_rerun", "id": "S15", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15740}
+ITEM {"arm": "hybrid_rerun", "id": "S16", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15862}
+ITEM {"arm": "hybrid_rerun", "id": "S17", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 15187}
+ITEM {"arm": "hybrid_rerun", "id": "S18", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15542}
+ITEM {"arm": "hybrid_rerun", "id": "S19", "expected": "review", "answer": "pass", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15541}
+ITEM {"arm": "hybrid_rerun", "id": "S20", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16204}
+ITEM {"arm": "hybrid_rerun", "id": "S21", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14711}
+ITEM {"arm": "hybrid_rerun", "id": "S22", "expected": "fail", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "refused", "ms": 19359}
+ITEM {"arm": "hybrid_rerun", "id": "S23", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15706}
+ITEM {"arm": "hybrid_rerun", "id": "S24", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15968}
+ITEM {"arm": "hybrid_rerun", "id": "S25", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14379}
+ITEM {"arm": "hybrid_rerun", "id": "S26", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "amended", "gate": "none", "ms": 15187}
+ITEM {"arm": "hybrid_rerun", "id": "S27", "expected": "review", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "refused", "ms": 19541}
+ITEM {"arm": "hybrid_rerun", "id": "S28", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15417}
+ITEM {"arm": "hybrid_rerun", "id": "S29", "expected": "pass", "answer": "unknown", "recorded": "pass", "check": "held_misread", "gate": "accepted", "ms": 18312}
+ITEM {"arm": "hybrid_rerun", "id": "S30", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "amended", "gate": "none", "ms": 14834}
+ITEM {"arm": "hybrid_rerun", "id": "S31", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15914}
+ITEM {"arm": "hybrid_rerun", "id": "S32", "expected": "review", "answer": "pass", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15473}
+ITEM {"arm": "hybrid_rerun", "id": "S33", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 14584}
+ITEM {"arm": "hybrid_rerun", "id": "S34", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "ms": 15209}
+ITEM {"arm": "hybrid_rerun", "id": "S35", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16137}
+ITEM {"arm": "hybrid_rerun", "id": "S36", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15551}
+ITEM {"arm": "hybrid_rerun", "id": "S37", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "ms": 744}
+ITEM {"arm": "hybrid_rerun", "id": "S38", "expected": "fail", "answer": "fail", "recorded": "review", "check": "amended", "gate": "refused", "ms": 62609}
+ITEM {"arm": "hybrid_rerun", "id": "S39", "expected": "review", "answer": "pass", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 15435}
+ITEM {"arm": "hybrid_rerun", "id": "S40", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "gate": "none", "ms": 16195}
+ITEM {"arm": "open-device", "id": "O01", "expected": "fail", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "none", "cloud": false, "ms": 15740}
+ITEM {"arm": "open-device", "id": "O02", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "cloud": false, "ms": 15330}
+ITEM {"arm": "open-device", "id": "O03", "expected": "fail", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "cloud": false, "ms": 15351}
+ITEM {"arm": "open-device", "id": "O04", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "cloud": false, "ms": 15521}
+ITEM {"arm": "open-device", "id": "O05", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "cloud": false, "ms": 16230}
+ITEM {"arm": "open-device", "id": "O06", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "cloud": false, "ms": 15609}
+ITEM {"arm": "open-device", "id": "O07", "expected": "fail", "answer": "pass", "recorded": "pass", "check": "kept", "gate": "none", "cloud": false, "ms": 15617}
+ITEM {"arm": "open-device", "id": "O08", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "cloud": false, "ms": 15476}
+ITEM {"arm": "open-device", "id": "O09", "expected": "review", "answer": "unknown", "recorded": "review", "check": "amended", "gate": "none", "cloud": false, "ms": 16284}
+ITEM {"arm": "open-device", "id": "O10", "expected": "review", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "none", "cloud": false, "ms": 15619}
+ITEM {"arm": "open-hybrid", "id": "O01", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "kept", "gate": "accepted", "cloud": true, "ms": 21212}
+ITEM {"arm": "open-hybrid", "id": "O02", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "kept", "gate": "accepted", "cloud": true, "ms": 19906}
+ITEM {"arm": "open-hybrid", "id": "O03", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "amended", "gate": "accepted", "cloud": true, "ms": 26252}
+ITEM {"arm": "open-hybrid", "id": "O04", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "cloud": false, "ms": 14927}
+ITEM {"arm": "open-hybrid", "id": "O05", "expected": "fail", "answer": "unknown", "recorded": "fail", "check": "kept", "gate": "accepted", "cloud": true, "ms": 23406}
+ITEM {"arm": "open-hybrid", "id": "O06", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "cloud": false, "ms": 15617}
+ITEM {"arm": "open-hybrid", "id": "O07", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "amended", "gate": "none", "cloud": false, "ms": 15913}
+ITEM {"arm": "open-hybrid", "id": "O08", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "gate": "none", "cloud": false, "ms": 15655}
+ITEM {"arm": "open-hybrid", "id": "O09", "expected": "review", "answer": "unknown", "recorded": "review", "check": "amended", "gate": "accepted", "cloud": true, "ms": 24335}
+ITEM {"arm": "open-hybrid", "id": "O10", "expected": "review", "answer": "unknown", "recorded": "review", "check": "kept", "gate": "accepted", "cloud": true, "ms": 21595}
+ITEM {"arm": "holdout", "id": "H01", "expected": "review", "answer": "fail", "recorded": "fail", "check": "kept", "ms": 15862}
+ITEM {"arm": "holdout", "id": "H02", "expected": "review", "answer": "unknown", "recorded": "review", "check": "kept", "ms": 16972}
+ITEM {"arm": "holdout", "id": "H03", "expected": "fail", "answer": "unknown", "recorded": "review", "check": "held_misread", "ms": 15053}
+ITEM {"arm": "holdout", "id": "H04", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_misread", "ms": 15371}
+ITEM {"arm": "holdout", "id": "H05", "expected": "pass", "answer": "pass", "recorded": "pass", "check": "kept", "ms": 14576}
+ITEM {"arm": "holdout", "id": "H06", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "ms": 15464}
+ITEM {"arm": "holdout", "id": "H07", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_inconclusive", "ms": 15982}
+ITEM {"arm": "holdout", "id": "H08", "expected": "fail", "answer": "fail", "recorded": "fail", "check": "kept", "ms": 14485}
+ITEM {"arm": "holdout", "id": "H09", "expected": "review", "answer": "unknown", "recorded": "review", "check": "held_misread", "ms": 15366}
+ITEM {"arm": "holdout", "id": "H10", "expected": "review", "answer": "fail", "recorded": "review", "check": "held_inconclusive", "ms": 15572}
+ITEMS_END
+
+## Layout readings, second session at a phone width (MODE layout, 2026-11-25)
+# Same published build, four readings only: 1440 and a 390 by 844 viewport set through
+# CDP device metrics, because Chrome on Linux refuses a window narrower than 500 px.
+LAYOUT {"clientW": 1425, "console": [], "consoleSevere": 0, "innerH": 757, "innerW": 1440, "overflow": 0, "scrollW": 1425, "tag": "desktop", "title": "WalkProof / building safety walkthrough"}
+LAYOUT {"clientW": 390, "console": [], "consoleSevere": 0, "innerH": 844, "innerW": 390, "overflow": 0, "scrollW": 390, "tag": "mobile", "title": "WalkProof / building safety walkthrough"}
+LAYOUT {"clientW": 1425, "console": [], "consoleSevere": 0, "innerH": 757, "innerW": 1440, "overflow": 0, "scrollW": 1425, "tag": "bench-desktop", "title": "WalkProof / 40 item measurement"}
+LAYOUT {"clientW": 390, "console": [], "consoleSevere": 0, "innerH": 844, "innerW": 390, "overflow": 0, "scrollW": 390, "tag": "bench-mobile", "title": "WalkProof / 40 item measurement"}

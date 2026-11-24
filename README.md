@@ -70,11 +70,64 @@ line cannot carry at all is refused, and the item goes to a person.
 The ten cloud path notes (`?set=open` on the bench page, `src/bench/scenarios.ts`)
 were written for this path: each is decisive, each names the defect and scores it
 down from one quiet word (`small`, `slight`), and the rule parser leaves all ten
-open. The human key says fail on eight and review on two. That set is what the
-next run measures, and until it runs the README makes no claim about how often
-the cloud gets it right.
+open. The human key says fail on eight and review on two. That set was measured
+on 2026-11-25, in the section below.
 
-## Measured on 2026-11-23
+## Measured on 2026-11-25
+
+The forty observations, the ten held-out notes and the ten cloud path notes were
+measured again on the shipped build, this time with `gemini-4-hydrogen`, and the
+forty item arms ran twice in one session so the spread of an arm against itself
+is a measured number. Raw result:
+`benchmarks/results-kaggle-2026-11-25.json`, the session's own table in
+`benchmarks/raw-d6-2026-11-25.txt`.
+
+| | on-device | hybrid | ten held-out notes | ten cloud path notes, device | ten cloud path notes, hybrid |
+|---|---|---|---|---|---|
+| items | 40 | 40 | 10 | 10 | 10 |
+| agreement with the human key | 34 (85%) | 40 (100%) | 8 (80%) | 7 (70%) | 10 (100%) |
+| agreement of the model answer alone | 27 (68%) | 28 (70%) | 7 (70%) | 7 (70%) | 6 (60%) |
+| items the line left open and the device held | 22 | 20 | 6 | 0 | 0 |
+| items the device amended from the line | 3 | 4 | 0 | 1 | 3 |
+| review items that were settled anyway | 0 of 20 | 0 of 20 | 1 of 7 | 0 of 2 | 0 of 2 |
+| total time | 613.5 s | 615.7 s | 154.7 s | 156.8 s | 198.8 s |
+| median latency | 15,321 ms | 15,277 ms | 15,418 ms | 15,613 ms | 20,559 ms |
+| cloud calls | 0 | 2 | 0 | 0 | 6 |
+| cloud answers the gate refused | n/a | 1 | n/a | n/a | 0 |
+| items the cloud settled, and how many of those matched the key | n/a | 1 of 1 | n/a | n/a | 4 of 4 |
+| photo bytes to the cloud | 0 | 0 | 0 | 0 | 0 |
+| request bytes to the cloud | 0 | 943 | 0 | 0 | 2,904 |
+
+The second pass of the same forty notes, in the same session, agreed with the key
+on 37 of 40 on the device and 38 of 40 through the hybrid. Between its two passes
+the device arm recorded a different verdict on 7 of 40 items (S01, S06, S10, S21,
+S22, S25, S34) and the hybrid on 2 of 40 (S22, S38). One arm moving seven items
+is wider than the gap between the two arms, so a single run cannot rank the two
+paths. What the two passes do show is that the hybrid was no further from the key
+than the device in the same session, 40 against 34 and then 38 against 37.
+
+The cloud was asked two times in the first pass and five times in the second, not
+twenty: the narrowed rule sends only an item the rules left open on a decisive
+line. In the first pass S22 was accepted and settled to fail, which is the key,
+while the device alone left it at review; S27 was refused because the answer
+contradicted the on-device finding. In the second pass S09 and S29 were accepted
+and settled to pass, S22 and S27 were refused, and S38 lost its call to the 30 s
+limit and was recorded at review. So the one item the cloud gained in the first
+pass was not gained in the second, and the record never moved further than the
+evidence: four refusals and one timeout in the session, no settled review item
+that the key calls review, and no photo sent.
+
+On the ten cloud path notes the device alone recorded 7 of 10 (O01 and O07 at
+review, O03 at pass, where the key says fail). The hybrid recorded 10 of 10 with
+six calls: four answers were accepted and settled the item, and all four matched
+the key. The two control notes, O09 and O10, are the ones where a confident cloud
+answer would over-claim: both answers were accepted as findings, and the pack
+still recorded review on both, as the key says, so neither was settled.
+
+Across the session the cloud made 13 calls, the gate refused 4 answers, 6,282
+bytes of typed summary left the browser, and no photo byte left it.
+
+## The earlier run, 2026-11-23
 
 Forty observations (ten checklist items, four each: pass, fail, borderline,
 trap) were pushed through the on-device path and the shipped hybrid on a free 4
@@ -129,8 +182,8 @@ Since that run the cloud rule has been narrowed twice. An item the device alread
 left to a person because the line was uncertain is no longer sent at all, so the
 day's twenty calls go to items with a decisive line. And an accepted answer can
 now become the finding the pack judges, as described above. The recorded numbers
-stay as they were measured; the next run measures both changes
-(`benchmarks/recheck-2026-11-24.md`).
+stay as they were measured. The next run measured both changes, and it is the
+section above.
 
 The ten held-out notes show where the word list stops: a hedge phrased without
 one of its words still gets settled, and H03, a failure written as "cover is off
@@ -329,19 +382,23 @@ confirm what it shows. Numbers and the reproduction notebook are in
   the work.
 - The cross check reads words, not meaning. It catches the hedges an inspector
   actually writes (not sure, cannot tell, unclear, maybe, no idea) and misses a
-  guess phrased another way: in the ten held-out notes it held 5 of the 7 open
-  cases. A model side hedge flag is the next step, not more words in the list.
-- A missed defect is a different failure from an over-claimed one. In the hybrid
-  run the model read "two pallets of stock left in front of the exit door" as
-  nothing wrong and the record said pass; in the device run of the same forty
-  notes the same line was read as fail. Both answers came from the on-device
-  model, so the difference is run to run variation, not the cloud. A single
-  measured run is not enough to rank the two paths.
+  guess phrased another way: in the ten held-out notes of 2026-11-25 it held 6 of
+  the 7 open cases. A model side hedge flag is the next step, not more words in
+  the list.
+- A missed defect is a different failure from an over-claimed one. In the
+  2026-11-23 run the model read "two pallets of stock left in front of the exit
+  door" as nothing wrong and the record said pass; in the device run of the same
+  forty notes the same line was read as fail. Both answers came from the
+  on-device model, so the difference is run to run variation, not the cloud. The
+  2026-11-25 run put a number on that variation: the same arm recorded a different
+  verdict on 7 of the 40 items between two passes, so a single measured run is not
+  enough to rank the two paths.
 - A cloud answer can be wrong. That is why the gate exists, why rejections are
   shown, and why an unresolved item is signed off by a person. The gate can tell
   that an answer is inconsistent with the pack and the line; it cannot tell that
   a painted rim is harmless while the bulb is clear. Oversettling is the failure
-to watch in the cloud path set.
+  to watch in the cloud path set, and the two control notes of that set (O09, O10)
+  were both recorded at review in the 2026-11-25 run, which is the key.
 - A decisive failure the word list misses is still recorded as pass and never
   reaches the cloud, because the device's settled verdict is not overridden. H03
   is that case: "cover is off the board" is not in the parser's vocabulary, so the
