@@ -113,10 +113,22 @@ def new_driver(width, height):
     return browser
 
 
+def set_viewport(browser, width):
+    """A phone width needs CDP emulation: Chrome on Linux refuses a window under 500 px."""
+    if width < 500:
+        browser.execute_cdp_cmd(
+            "Emulation.setDeviceMetricsOverride",
+            {"width": width, "height": 844, "deviceScaleFactor": 1, "mobile": True},
+        )
+    else:
+        browser.execute_cdp_cmd("Emulation.clearDeviceMetricsOverride", {})
+        browser.set_window_size(width, 900)
+
+
 def layout_report(browser, url, tag, shot_path, width, height):
-    # The window has to be this size before the page is read, or the phone
+    # The viewport has to be this size before the page is read, or the phone
     # reading is desktop numbers under a phone name.
-    browser.set_window_size(width, height)
+    set_viewport(browser, width)
     browser.get(url)
     time.sleep(6)
     report = browser.execute_script(
@@ -271,12 +283,19 @@ def main():
     layout = {}
     browser = new_driver(1440, 900)
     try:
+        bench_live = bench_url("main")
         layout["desktop"] = layout_report(browser, SITE, "desktop", f"/kaggle/working/walkproof-pages-1440{TAG}.png", 1440, 900)
         layout["mobile"] = layout_report(browser, SITE, "mobile", f"/kaggle/working/walkproof-pages-390{TAG}.png", 390, 844)
-        layout["bench_desktop"] = layout_report(browser, BASE, "bench-desktop", f"/kaggle/working/walkproof-bench-1440{TAG}.png", 1440, 900)
-        layout["bench_mobile"] = layout_report(browser, BASE, "bench-mobile", f"/kaggle/working/walkproof-bench-390{TAG}.png", 390, 844)
+        layout["bench_desktop"] = layout_report(browser, bench_live, "bench-desktop", f"/kaggle/working/walkproof-bench-1440{TAG}.png", 1440, 900)
+        layout["bench_mobile"] = layout_report(browser, bench_live, "bench-mobile", f"/kaggle/working/walkproof-bench-390{TAG}.png", 390, 844)
 
-        browser.set_window_size(1440, 900)
+        if MODE == "layout":
+            set_viewport(browser, 1440)
+            with open(f"/kaggle/working/walkproof-layout{TAG}.json", "w") as handle:
+                json.dump(layout, handle, indent=1)
+            return
+
+        set_viewport(browser, 1440)
 
         local = run_arms(browser, device=True, hybrid=True, cloud=False, count=CLOUD_ONLY)
         print("forty item arms done", flush=True)
