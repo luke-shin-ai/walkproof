@@ -12,7 +12,7 @@
       name="description"
       content="Measured comparison of the on-device path and the WalkProof hybrid across forty building safety observations, with an earlier six item cloud only baseline."
     />
-    <script type="module" crossorigin src="../assets/bench-L0O_W9Q6.js"></script>
+    <script type="module" crossorigin src="../assets/bench-CRuzRoAp.js"></script>
     <link rel="modulepreload" crossorigin href="../assets/pipeline-BzMa2wgA.js">
     <link rel="stylesheet" crossorigin href="../assets/bench-D1ZElV7y.css">
   </head>
@@ -23,9 +23,9 @@
         <h1>Forty observations, two recorded paths</h1>
         <p class="lede">
           The same forty notes and photos go through the on-device path and the shipped hybrid. A cloud only baseline was
-          run once on six items and is kept apart below, because the free tier allows 20 requests per model per day and
-          the recorded run spent them on the hybrid. A run needs the Firebase config in the URL fragment; the recorded
-          run below needs nothing and is what the README quotes.
+          run once, on six items on 2026-11-23, and is kept apart below: the product never sends a photo to a model, so
+          the baseline is the comparison and not the product. A run needs the Firebase config in the URL fragment; the
+          recorded run below needs nothing and is what the README quotes.
         </p>
         <p class="lede">
           Two more sets sit beside the forty. <a href="?set=heldout">The ten held out notes</a> ask for the same
@@ -48,8 +48,8 @@
         </div>
         <p class="status" id="status" role="status" aria-live="polite">Checking this browser.</p>
         <p class="small" id="model-note">
-          The recorded run used the fallback model gemini-3.5-flash-lite, because the gemini-4-hydrogen free daily quota
-          had been spent earlier that day.
+          The recorded run used gemini-4-hydrogen on 2026-11-25. The two runs before it used the fallback model
+          gemini-3.5-flash-lite, because the gemini-4-hydrogen free daily quota had been spent earlier that day.
         </p>
         <div class="probe" id="probe"></div>
       </section>
@@ -65,7 +65,7 @@
       <section class="card" id="baseline-card">
         <h2>Earlier cloud only baseline</h2>
         <p class="small">
-          Six items went to the cloud with their photos on 2026-11-23, an hour before the recorded run: 6 of 6 agreed
+          Six items went to the cloud with their photos on 2026-11-23, an hour before the D5 run: 6 of 6 agreed
           with the human key, 535,758 photo bytes and 718,749 request bytes left the browser, and no answer was refused.
           It is not repeated here because the same free daily quota covers it. The product does not send a photo to a
           model; this baseline is what the hybrid is measured against.
