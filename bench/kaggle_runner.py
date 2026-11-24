@@ -113,7 +113,10 @@ def new_driver(width, height):
     return browser
 
 
-def layout_report(browser, url, tag, shot_path):
+def layout_report(browser, url, tag, shot_path, width, height):
+    # The window has to be this size before the page is read, or the phone
+    # reading is desktop numbers under a phone name.
+    browser.set_window_size(width, height)
     browser.get(url)
     time.sleep(6)
     report = browser.execute_script(
@@ -140,10 +143,26 @@ def bench_url(set_name="main"):
     return f"{BASE}{params}#config={CFG}"
 
 
+def wait_for_bridge(browser, timeout=40):
+    """The page loads as a module, so the run button does nothing until it is up."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if browser.execute_script("return Boolean(window.__BENCH__ && window.__BENCH__.ready)"):
+            return True
+        time.sleep(1)
+    return False
+
+
 def run_arms(browser, device, hybrid, cloud, count, set_name="main"):
     """Sets the arm checkboxes, then a real click, which is what lets the page create the model."""
     browser.get(bench_url(set_name))
-    time.sleep(5)
+    if not wait_for_bridge(browser):
+        raise RuntimeError("the bench page never reported ready")
+    probe = browser.execute_script("const el = document.getElementById('probe'); return el ? el.textContent : ''")
+    print(f"probe {set_name}: {probe}", flush=True)
+    if "No Firebase config" in str(probe):
+        raise RuntimeError("the page did not accept the config fragment")
+    time.sleep(2)
     browser.execute_script(
         """
         const args = arguments[0];
@@ -252,10 +271,10 @@ def main():
     layout = {}
     browser = new_driver(1440, 900)
     try:
-        layout["desktop"] = layout_report(browser, SITE, "desktop", f"/kaggle/working/walkproof-pages-1440{TAG}.png")
-        layout["mobile"] = layout_report(browser, SITE, "mobile", f"/kaggle/working/walkproof-pages-390{TAG}.png")
-        layout["bench_desktop"] = layout_report(browser, BASE, "bench-desktop", f"/kaggle/working/walkproof-bench-1440{TAG}.png")
-        layout["bench_mobile"] = layout_report(browser, BASE, "bench-mobile", f"/kaggle/working/walkproof-bench-390{TAG}.png")
+        layout["desktop"] = layout_report(browser, SITE, "desktop", f"/kaggle/working/walkproof-pages-1440{TAG}.png", 1440, 900)
+        layout["mobile"] = layout_report(browser, SITE, "mobile", f"/kaggle/working/walkproof-pages-390{TAG}.png", 390, 844)
+        layout["bench_desktop"] = layout_report(browser, BASE, "bench-desktop", f"/kaggle/working/walkproof-bench-1440{TAG}.png", 1440, 900)
+        layout["bench_mobile"] = layout_report(browser, BASE, "bench-mobile", f"/kaggle/working/walkproof-bench-390{TAG}.png", 390, 844)
 
         browser.set_window_size(1440, 900)
 
