@@ -124,8 +124,8 @@ the key. The two control notes, O09 and O10, are the ones where a confident clou
 answer would over-claim: both answers were accepted as findings, and the pack
 still recorded review on both, as the key says, so neither was settled.
 
-Across the session the cloud made 13 calls, the gate refused 4 answers, 6,282
-bytes of typed summary left the browser, and no photo byte left it.
+Across the session the cloud made 13 calls and the gate refused 4 answers. The
+typed summaries came to 6,282 bytes and no photo byte left the browser.
 
 ## The earlier run, 2026-11-23
 

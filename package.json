@@ -15,7 +15,9 @@
     "verify": "npm run config:template && npm run test && npm run build && npm run check:ai-tells",
     "config:template": "node scripts/make-remoteconfig-template.mjs",
     "build:pages": "tsc --noEmit && vite build --mode pages",
-    "check:pages": "node scripts/check-public-build.mjs"
+    "check:pages": "node scripts/check-public-build.mjs",
+    "check:surfaces": "node scripts/check-surfaces.mjs",
+    "check:surfaces:offline": "node scripts/check-surfaces.mjs --offline"
   },
   "dependencies": {
     "firebase": "^13.4.0"
