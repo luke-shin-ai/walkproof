@@ -63,7 +63,10 @@ project, and the rules forbid carrying production API keys or live project
 secrets in the repository, the submission form or the testing instructions. The
 published build therefore takes a web config only at runtime, from the URL
 fragment, and runs the device job on the browser's own model. What a reviewer
-reads in the code is what a configured build runs.
+reads in the code is what a configured build runs. The published page says this
+itself in a note above the checklist, together with the result of the
+configured check below, so a reviewer who opens the live URL without `#config=`
+does not have to find this file to know where AI Logic sits.
 
 In a build with a project, every model call goes through `firebase/ai`. The
 browser's own `LanguageModel` is reached only in a build that has no project, as

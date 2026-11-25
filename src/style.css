@@ -253,6 +253,44 @@ input[type="text"]::placeholder {
   color: var(--accent-ink);
 }
 
+.reviewer-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 12px 24px 0;
+}
+
+.reviewer {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: #f7f9fb;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.reviewer-label {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-ink);
+}
+
+.reviewer a {
+  color: var(--accent-ink);
+}
+
+.reviewer code {
+  padding: 0 3px;
+  border-radius: 4px;
+  background: #eceff3;
+  font-size: 0.72rem;
+}
+
 /* -------------------------------------------------------------------- items */
 
 .checklist {
@@ -1019,6 +1057,16 @@ tbody tr:last-child td {
     padding: 10px 14px;
   }
 
+  .reviewer-wrap {
+    padding: 10px 14px 0;
+  }
+
+  .reviewer {
+    font-size: 0.73rem;
+    line-height: 1.45;
+    padding: 9px 10px;
+  }
+
   .tagline {
     display: none;
   }
@@ -1115,6 +1163,7 @@ tbody tr:last-child td {
   }
 
   .topbar,
+  .reviewer-wrap,
   .shell,
   .ledger,
   .gate,
