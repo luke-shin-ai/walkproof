@@ -209,7 +209,9 @@ answer would over-claim: both answers were accepted as findings, and the pack
 still recorded review on both, as the key says, so neither was settled.
 
 Across the session the cloud made 13 calls and the gate refused 4 answers. The
-typed summaries came to 6,282 bytes and no photo byte left the browser.
+typed summaries came to 6,282 bytes and no photo byte left the browser in either
+product path. This session did not run the cloud only baseline, so it sent no
+photo at all.
 
 ## Reproduce a measured run
 
