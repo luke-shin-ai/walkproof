@@ -86,6 +86,10 @@ which is the route the rules accept in a submission, and the badge says so. With
 neither it is not started and the badge reads `app check: off` with the reason.
 There is no placeholder key, so a broken App Check setup cannot look healthy.
 
+A page that took its web config from the fragment can take these two the same
+way, as `#sitekey=` and `#debugtoken=`, so the bench page can run a configured
+build without the repository carrying either value.
+
 `scripts/read-configured-build.py` serves a build made this way, runs the sample
 walkthrough and prints the badges, the layer that structured each record and the
 console errors, which is how the check below was made.
