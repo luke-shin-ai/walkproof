@@ -223,7 +223,9 @@ function stamp(iso: string): string {
  */
 function sourceText(observation: Observation): string {
   if (observation.source === "on_device") {
-    return observation.deviceSource === "on_device" ? "On-device model" : "Rule parser";
+    if (observation.deviceSource === "on_device") return "On-device model";
+    if (observation.deviceSource === "local_rules") return "Rule parser";
+    return "Device";
   }
   if (observation.source === "in_cloud") return "Cloud";
   if (observation.source === "rejected_unsupported") return "Rejected";
