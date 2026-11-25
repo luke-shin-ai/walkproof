@@ -71,6 +71,8 @@ export interface CloudAnswer extends Finding {
 export interface CloudCheck {
   model: string;
   modelFallback: boolean;
+  /** What the AI Logic SDK reported for this answer: `on_device` or `in_cloud`. */
+  inferenceSource?: string;
   payload: string;
   payloadBytes: number;
   accepted: boolean;

@@ -53,6 +53,29 @@ describe("what leaves the device", () => {
     expect(redacted).toContain("[number]");
   });
 
+  it("replaces a person and a place outside the safety vocabulary", () => {
+    const item = findItem(DEFAULT_PACK, "eg-05")!;
+    const redacted = redactForCloud("Exit door blocked by Mr Kim's pallets on Queen Street", item);
+    expect(redacted).toContain("[name]");
+    expect(redacted).not.toContain("Kim");
+    expect(redacted).not.toContain("Queen");
+    expect(redacted).toContain("pallets");
+    expect(redacted).toContain("Exit door");
+  });
+
+  it("keeps the safety words a decisive line is made of", () => {
+    const item = findItem(DEFAULT_PACK, "sd-08")!;
+    const redacted = redactForCloud("The Smoke detector has paint on the casing, Head looks painted.", item);
+    expect(redacted).not.toContain("[name]");
+    expect(redacted).toContain("Smoke detector");
+  });
+
+  it("leaves the first word of a sentence alone, which is a stated limit", () => {
+    const item = findItem(DEFAULT_PACK, "fe-01")!;
+    const redacted = redactForCloud("Kim's storeroom key is missing.", item);
+    expect(redacted).toContain("Kim");
+  });
+
   it("builds a typed payload with clause ids and no image", () => {
     const item = findItem(DEFAULT_PACK, "sd-08")!;
     const finding = structureNote(item, "Painted over during the refit, no idea whether it still works.")!;

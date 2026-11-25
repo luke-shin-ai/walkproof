@@ -10,7 +10,7 @@ import {
   warmDeviceModel,
 } from "./ai/hybrid";
 import { browserStore, readBudget } from "./budget";
-import { hasFirebaseConfig, initFirebase } from "./config/firebase";
+import { appCheckStatus, firebaseConfigSource, hasFirebaseConfig, initFirebase } from "./config/firebase";
 import { loadRulePack } from "./config/remoteConfig";
 import { DEMO_STEPS, loadDemoPhoto } from "./demo";
 import { ledgerCsv, reportModel, summarize, type WalkSummary } from "./ledger";
@@ -215,8 +215,16 @@ function stamp(iso: string): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+/**
+ * The layer that structured the note, named apart from the layer that judged it:
+ * `on_device` is the Gemini Nano model (through firebase/ai in a configured
+ * build, through the browser's own LanguageModel in the published one) and
+ * `local_rules` is the built-in rule parser.
+ */
 function sourceText(observation: Observation): string {
-  if (observation.source === "on_device") return observation.deviceSource === "on_device" ? "On device" : "Device rules";
+  if (observation.source === "on_device") {
+    return observation.deviceSource === "on_device" ? "On-device model" : "Rule parser";
+  }
   if (observation.source === "in_cloud") return "Cloud";
   if (observation.source === "rejected_unsupported") return "Rejected";
   return "Unresolved";
@@ -225,12 +233,23 @@ function sourceText(observation: Observation): string {
 function plainSource(source: string): string {
   if (source === "in_cloud") return "Cloud";
   if (source === "rejected_unsupported") return "Rejected";
-  if (source === "on_device") return "Device rules";
+  if (source === "on_device") return "Device";
   return "Unresolved";
 }
 
 function plainDetail(text: string): string {
   return text.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
+}
+
+/** Says which layer structured a note, and by which route in this build. */
+function structuringDetail(source: Observation["deviceSource"]): string {
+  if (source === "on_device") {
+    return state.firebaseReady
+      ? "Note structured on this device through firebase/ai (ONLY_ON_DEVICE) from Firebase AI Logic."
+      : "Note structured by this browser's own LanguageModel, because this published build carries no Firebase project.";
+  }
+  if (source === "local_rules") return "Note structured by the built-in rule parser on this device, because no on-device model answered.";
+  return "No structured finding for this item.";
 }
 
 function sourceClass(observation: Observation): string {
@@ -315,9 +334,21 @@ function sleep(ms: number): Promise<void> {
  */
 function footText(): string {
   if (!state.firebaseReady) {
-    return "Built-in demo mode: on-device structuring when supported, cloud checks off";
+    return "Published demo build: no Firebase project, so no AI Logic call is made here; notes are structured by this browser's own model or the rule parser and cloud checks are off";
   }
-  return `Firebase AI Logic hybrid / Gemini Nano on device / ${esc(state.cloudModel)} for items the device leaves open`;
+  const check = appCheckStatus();
+  const checkText =
+    check.state === "on" ? "App Check on" : check.state === "failed" ? "App Check failed" : "App Check off";
+  return `Firebase AI Logic hybrid (config: ${firebaseConfigSource()}) / Gemini Nano 4 on device through firebase/ai / ${esc(state.cloudModel)} for items the device leaves open / ${checkText}`;
+}
+
+/** The App Check state, shown rather than logged, because AI Logic needs it. */
+function appCheckBadge(): string {
+  const check = appCheckStatus();
+  if (check.state === "not started") return "";
+  const label =
+    check.state === "on" ? "app check: on" : check.state === "failed" ? "app check: failed" : "app check: off";
+  return `<span class="badge" title="${esc(check.detail)}">${esc(label)}</span>`;
 }
 
 function badgeRow(): string {
@@ -325,7 +356,9 @@ function badgeRow(): string {
   const originLabel = state.packOrigin === "remote" ? "remote" : state.packOrigin === "cache" ? "cached" : "built-in";
   const deviceLabel =
     state.device === "ready"
-      ? "on-device model ready"
+      ? state.firebaseReady
+        ? "on-device model ready (firebase/ai)"
+        : "on-device model ready (browser)"
       : state.device === "checking"
         ? "device: checking"
         : state.device === "downloadable"
@@ -341,6 +374,7 @@ function badgeRow(): string {
     `<span class="badge strong" title="${esc(state.packDetail)}">pack ${esc(pack.version)} <span class="badge-sub">${originLabel}</span></span>`,
     `<span class="badge" title="${esc(state.deviceDetail || "The on-device model structures the note when the device has it.")}">${esc(deviceLabel)}</span>`,
     `<span class="badge">${esc(cloud)}</span>`,
+    state.firebaseReady ? appCheckBadge() : "",
     `<span class="badge">${net}</span>`,
   ].join("");
 }
@@ -406,17 +440,14 @@ function resultBlock(item: RulePack["items"][number], observation: Observation |
   }
 
   const details: string[] = [];
-  details.push(
-    observation.deviceSource === "on_device"
-      ? "Note structured by the on-device model."
-      : observation.deviceSource === "local_rules"
-        ? "Note structured by the built-in rule parser."
-        : "No structured finding for this item.",
-  );
+  details.push(structuringDetail(observation.deviceSource));
   if (observation.photoDataUrl) details.push("Photo re-encoded on the device, so EXIF and GPS are gone.");
   if (observation.cloud) {
     details.push(
-      `Cloud call ${observation.cloud.model}: ${formatBytes(observation.cloud.payloadBytes)} of typed summary, no photo.`,
+      `Cloud call ${observation.cloud.model}: ${formatBytes(observation.cloud.payloadBytes)} of typed summary, no photo.` +
+        (observation.cloud.inferenceSource
+          ? ` The AI Logic SDK reported inference source ${observation.cloud.inferenceSource}.`
+          : ""),
     );
     if (observation.cloud.accepted) {
       details.push("Answer passed seven checks on the device: schema, clause in the pack, clause applies, no contradiction, the rule pack agrees with the suggested verdict, no hedge turned into a verdict, and the line carries the finding.");
@@ -722,7 +753,7 @@ function render(): void {
         <div class="card mini">
           <h2>How the boundary works</h2>
           <ol>
-            <li>The note is structured on the device into one schema. Without the on-device model, the built-in rule parser does it.</li>
+            <li>The note is structured on the device into one schema: Gemini Nano through firebase/ai in a build with Firebase values, or this browser's own model in the published build. Without either, the built-in rule parser does it.</li>
             <li>The rule pack decides pass, fail or unknown. A model never sets the verdict on its own.</li>
             <li>Only an item the rule pack leaves open, on a line that was decisive, goes to the cloud, inside the day's budget, as a typed summary. So does an item whose device reading did not survive the check against the line. A line that says the observer could not tell goes straight to a person.</li>
             <li>The answer is checked on the device, seven checks including whether the line can carry the finding. A wrong clause, a missing field, a hedge turned into a verdict or a contradiction is rejected and handed to a person. An answer that passes becomes the finding, and the rule pack turns it into the verdict.</li>

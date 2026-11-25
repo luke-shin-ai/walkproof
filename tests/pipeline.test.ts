@@ -126,6 +126,7 @@ describe("item pipeline", () => {
     expect(observation.source).toBe("in_cloud");
     expect(observation.verdict).toBe("unknown");
     expect(observation.clauseIds).toEqual(["SD-08"]);
+    expect(observation.cloud?.inferenceSource).toBe("in_cloud");
     expect(observation.reasons.join(" ")).toContain("cloud answer accepted");
   });
 

@@ -412,7 +412,7 @@ export async function runCloudOnlyArm(deps: BenchDeps, scenarios = BENCH_SCENARI
     }
 
     if (items.length) await pause(deps.gapMs);
-    const payload = { itemId: item.id, item: item.label, zone: item.zone, note: redactForCloud(scenario.note), noteVerbatim: scenario.note, allowedClauseIds: item.clauses, photo: "attached" };
+    const payload = { itemId: item.id, item: item.label, zone: item.zone, note: redactForCloud(scenario.note, item), noteVerbatim: scenario.note, allowedClauseIds: item.clauses, photo: "attached" };
     const result = await deps.classifyWithPhoto(item, scenario.note, photo);
     const latencyMs = result.error ? result.latencyMs : Math.round(performance.now() - started);
 

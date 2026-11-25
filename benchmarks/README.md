@@ -1,8 +1,14 @@
 # Measured runs
 
-The current run was made on 2026-11-25 with the published build at
+The current run was made on 2026-11-25 (KST, stamped 2026-11-24T22:59Z in the
+result file) with the published build at
 https://luke-shin-ai.github.io/walkproof/bench/ . The run before it was made on
-2026-11-23 with the same page.
+2026-11-23 (KST) with the same page.
+
+The answer key in `../fixtures/ground-truth.json` was written by the entrant
+before the model ran. It is one author's reading, not an independent assessor's
+key, and the D6 run reports both passes of the same arm so the spread can be
+read next to the agreement.
 
 | file | host | what it covers |
 |---|---|---|
@@ -10,9 +16,9 @@ https://luke-shin-ai.github.io/walkproof/bench/ . The run before it was made on
 | `raw-d6-2026-11-25.txt` | the same session | the lines the session printed (variation, arm metrics, the sets) and the per item table from the result file it wrote, plus four layout readings from a second session at 1440 and a 390 by 844 viewport |
 | `raw-d5-2026-11-23.txt` | Kaggle Notebooks free CPU session (4 cores, 32 GiB, Chrome 158 on Linux) | the lines the D5 session printed: arm metrics, the per item table, the gate refusals, the layout checks |
 | `results-kaggle-2026-11-23.json` | assembled from the file above by `scripts/assemble-d5.mjs` | the D5 run: forty observations on the device and through the hybrid, plus ten held-out notes on the device |
-| `results-kaggle-d4-2026-11-23.json` | the earlier session of the same day, kept as it was recorded | D4: the same forty observations before the answer was checked against the line, with a six item cloud only baseline |
+| `results-kaggle-d4-2026-11-23.json` | the earlier session of the same day, kept as it was recorded | D4: the same forty observations before the answer was checked against the line, with a six item cloud only baseline, the one run here that sent photos (535,758 bytes) |
 
-The D6 run used `gemini-4-hydrogen`; the D4 and D5 sessions used
+The D6 run used `gemini-4-hydrogen`; the D4 baseline and D5 sessions used
 `gemini-3.5-flash-lite`, the app's one fallback, because the `gemini-4-hydrogen`
 daily free quota had been spent earlier that day. The D4 session ended 71 minutes
 before the D5 one, so any sentence that compares them means an hour apart on the
@@ -72,8 +78,10 @@ settled items, all four right; the two control notes O09 and O10 were accepted a
 findings and still recorded at review, so neither was settled.
 
 Across the session: 13 cloud calls, 4 refusals, 6,282 request bytes, 0 photo
-bytes. The session was a free CPU session, accelerator none, and it ended when
-the run ended.
+bytes. Those 0 photo bytes belong to the two product paths. The only run in this
+repository that sent photos is the D4 cloud only baseline below, which exists
+for comparison and is not part of the product. The session was a free CPU
+session, accelerator none, and it ended when the run ended.
 
 ## The D5 run of 2026-11-23
 
@@ -135,6 +143,22 @@ the device, 10 of 10 through the hybrid, with the two controls recorded at revie
 | cloud only | baseline in `src/bench/harness.ts` | every item goes to the cloud with its photo and its line; measured on six items in D4 because of the free tier |
 
 ## How to reproduce
+
+The commands the D6 session ran:
+
+```python
+# in a free Kaggle CPU notebook, with Chrome installed by the script
+BASE = "https://luke-shin-ai.github.io/walkproof/bench/"
+CFG  = "<base64url json of the web app config>"
+MODEL = "gemini-4-hydrogen"; REPEAT = 1; OPEN = 1; CLOUD_ONLY = 0
+exec(open("kaggle_runner.py").read())
+```
+
+`MODE` selects what runs: `all` (the default, everything below), `heldout` (the
+ten held-out notes alone) or `layout` (the two pages at 1440 px and 390 by 844
+only, under two minutes). `REPEAT=1` runs the forty item arms a second time in
+the same session and `OPEN=1` adds the ten cloud path notes. Keep `CLOUD_ONLY`
+at 0 when `OPEN` is on, because both spend the same daily meter.
 
 1. Open the bench page with the web app config in the URL fragment:
    `https://luke-shin-ai.github.io/walkproof/bench/#config=<base64url json>`.

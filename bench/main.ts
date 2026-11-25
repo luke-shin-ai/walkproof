@@ -214,6 +214,23 @@ function metricRow(label: string, value: string): string {
   return `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`;
 }
 
+/** Names the layer that structured the note, instead of its internal value. */
+function structuringText(source: string | undefined): string {
+  if (source === "on_device") return "on-device model";
+  if (source === "local_rules") return "rule parser";
+  if (!source || source === "none") return "none";
+  return source;
+}
+
+/** The run's own clock, in both the zone it was recorded in and UTC. */
+function recordedAt(iso: string | undefined): string {
+  if (!iso) return "unknown";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000).toISOString().replace("T", " ").slice(0, 19);
+  return `${kst} KST (${iso.replace(".000", "")} UTC)`;
+}
+
 function checkText(evidence: string | undefined): string {
   if (evidence === "amended") return "amended";
   if (evidence === "held_inconclusive") return "held: line unclear";
@@ -247,7 +264,7 @@ function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
         <td>${entry.answerVerdict ?? entry.recorded}</td>
         <td>${entry.recorded}</td>
         <td>${checkText(entry.evidence)}</td>
-        <td>${entry.deviceSource}</td>
+        <td>${structuringText(entry.deviceSource)}</td>
         <td>${entry.gate}</td>
         <td class="num">${entry.latencyMs}</td>
         <td class="num">${entry.photoBytesSent}</td>
@@ -269,6 +286,8 @@ function armCard(metrics: ArmMetrics, items: ArmResult["items"]): string {
       ${metricRow("settled without cloud", `${metrics.offlineShare}%`)}
       ${metricRow("agreement", `${metrics.agreement}%`)}
       ${metricRow("agreement of the raw answer", `${metrics.answerAgreement}%`)}
+      ${metricRow("structured by the on-device model", String(items.filter((entry) => entry.deviceSource === "on_device").length))}
+      ${metricRow("structured by the rule parser", String(items.filter((entry) => entry.deviceSource === "local_rules").length))}
       ${metricRow("held by the line", String(metrics.heldByNote))}
       ${metricRow("amended from the line", String(metrics.amendedByNote))}
       ${metricRow("refusals", `${metrics.refused} of ${metrics.cloudCalls}`)}
@@ -478,7 +497,7 @@ async function loadRecorded(): Promise<void> {
     for (const [name, metrics] of Object.entries(data.open?.metrics ?? {})) {
       cards.push({ metrics: { ...metrics, arm: `open-${name}` }, items: data.open?.items?.[name] ?? [] });
     }
-    note.textContent = `Recorded ${String(data.environment?.capturedAt ?? "")} with ${String(data.cloudModel ?? "")}.`;
+    note.textContent = `Recorded ${recordedAt(String(data.environment?.capturedAt ?? ""))} with ${String(data.cloudModel ?? "")}.`;
     target.innerHTML = `<section class="card"><h2>Run</h2><p class="small">${String(data.environment?.userAgent ?? "")} / cores ${String(data.environment?.cores ?? "?")} / memory ${String(data.environment?.deviceMemoryGB ?? "?")} GB / WebGPU ${String(data.environment?.webgpu ?? "?")} / device model ${String(data.environment?.deviceAvailability ?? "?")}</p></section>
       ${cards.map((card) => armCard(card.metrics, card.items)).join("")}`;
   } catch (error) {

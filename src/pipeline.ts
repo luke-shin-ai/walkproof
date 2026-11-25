@@ -181,6 +181,7 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
           cloud = {
             model: result.model,
             modelFallback: result.modelFallback,
+            inferenceSource: result.source,
             payload: payload.json,
             payloadBytes: payload.bytes,
             accepted: false,
@@ -209,6 +210,7 @@ export async function processItem(input: PipelineInput, deps: PipelineDeps): Pro
           cloud = {
             model: result.model,
             modelFallback: result.modelFallback,
+            inferenceSource: result.source,
             payload: payload.json,
             payloadBytes: payload.bytes,
             accepted: verification.accepted,

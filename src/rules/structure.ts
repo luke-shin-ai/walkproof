@@ -120,15 +120,88 @@ export function structureNote(item: InspectionItem, note: string, targetName?: s
 }
 
 /**
- * The cloud never receives a photo. This keeps a typed summary to the fields the
- * model needs and masks anything that looks like an address, a unit number, a
- * phone number or a plate before it leaves the device.
+ * Words that may stay in a line sent to the cloud: the safety vocabulary the
+ * rule pack already uses plus ordinary building words. A capitalised word that
+ * is not here and is not the first word of its sentence is treated as a name,
+ * a street, a shop or a company and replaced.
  */
-export function redactForCloud(text: string): string {
+const SAFETY_VOCABULARY = [
+  "fire", "extinguisher", "extinguishers", "exit", "exits", "emergency", "sign", "signs", "door", "doors",
+  "shutter", "shutters", "smoke", "detector", "detectors", "sprinkler", "sprinklers", "head", "heads",
+  "hose", "reel", "reels", "panel", "panels", "board", "boards", "distribution", "electrical", "cabinet",
+  "cabinets", "corridor", "corridors", "stair", "stairs", "staircase", "core", "car", "park", "parking",
+  "yard", "store", "storeroom", "storage", "lobby", "reception", "ceiling", "wall", "walls", "roof", "floor",
+  "floors", "room", "rooms", "utility", "plant", "pump", "pumps", "alarm", "alarms", "call", "point", "points",
+  "assembly", "first", "aid", "kit", "kits", "light", "lights", "lighting", "lamp", "lamps", "battery",
+  "batteries", "gauge", "tag", "tags", "paint", "painted", "cover", "covers", "glass", "bracket", "brackets",
+  "pipe", "pipes", "valve", "valves", "riser", "track", "tracks", "frame", "frames", "route", "routes",
+  "escape", "load", "loads", "goods", "stock", "pallet", "pallets", "box", "boxes", "ladder", "ladders",
+  "trolley", "cart", "carts", "furniture", "block", "blocked", "blocking", "crack", "cracks", "spall",
+  "spalling", "exposed", "damage", "damaged", "rust", "rusty", "corroded", "leak", "leaks", "water", "damp",
+  "loose", "wire", "wires", "wiring", "busbar", "busbars", "breaker", "breakers", "switch", "switches", "fuse",
+  "fuses", "meter", "meters", "gas", "shut", "closed", "open", "missing", "absent", "present", "clear",
+  "unclear", "unsure", "maybe", "possibly", "slight", "small", "minor", "major", "severe", "large", "wide",
+  "deep", "hairline", "surface", "structural", "through", "showing", "live", "level", "ground", "basement",
+  "rooftop", "entrance", "kitchen", "toilet", "toilets", "washroom", "garage", "driveway", "gate", "gates",
+  "fence", "path", "walkway", "ramp", "step", "steps", "handle", "hinge", "hinges", "lock", "locks", "key",
+  "wedge", "month", "year", "week", "day", "days", "today", "yesterday", "monday", "tuesday", "wednesday",
+  "thursday", "friday", "saturday", "sunday", "january", "february", "march", "april", "may", "june", "july",
+  "august", "september", "october", "november", "december", "the", "a", "an", "this", "that", "its", "his",
+  "her", "their", "our", "my", "and", "or", "but", "not", "no", "yes", "with", "without", "from", "into",
+  "i", "im", "dont", "cant", "isnt",
+];
+
+/** The item in hand supplies its own words, so a label at the start of a line stays readable. */
+function keepWords(item?: InspectionItem): Set<string> {
+  const words = new Set(SAFETY_VOCABULARY);
+  const source = item ? `${item.label} ${item.zone} ${item.expects.replace(/_/g, " ")}` : "";
+  for (const word of source.toLowerCase().split(/[^a-z]+/)) {
+    if (word) words.add(word);
+  }
+  return words;
+}
+
+/**
+ * Replaces a capitalised word that is not safety vocabulary with `[name]`. The
+ * first word of a sentence is left alone, because a sentence starts with a
+ * capital whatever it says.
+ */
+function maskProperNouns(text: string, keep: Set<string>): string {
   return text
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) =>
+      sentence
+        .split(" ")
+        .map((token, index) => {
+          if (index === 0) return token;
+          const core = token.replace(/^[^\p{L}]+|[^\p{L}'\u2019.-]+$/gu, "");
+          if (!/^\p{Lu}[\p{L}'\u2019.-]*$/u.test(core)) return token;
+          const bare = core.toLowerCase().replace(/['\u2019]s$/, "");
+          if (keep.has(bare)) return token;
+          return token.slice(0, token.indexOf(core)) + "[name]" + token.slice(token.indexOf(core) + core.length);
+        })
+        .join(" "),
+    )
+    .join(" ");
+}
+
+/**
+ * The cloud never receives a photo. This keeps a typed summary to the fields the
+ * model needs and masks what identifies a person or a place before it leaves the
+ * device: an email address, a phone-like or long number, and a capitalised word
+ * that is not part of the safety vocabulary (`Mr Kim's storeroom` becomes
+ * `[name] [name] storeroom`).
+ *
+ * It is a filter, not anonymisation. A name written in lower case, or a place
+ * named without a capital, goes through, and the first word of a sentence is left
+ * as written. That is why the sample lines carry no names at all.
+ */
+export function redactForCloud(text: string, item?: InspectionItem): string {
+  const masked = text
     .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[email]")
     .replace(/\+?\d[\d\s-]{6,}\d/g, "[number]")
-    .replace(/\d{2,}/g, "[n]")
+    .replace(/\d{2,}/g, "[n]");
+  return maskProperNouns(masked, keepWords(item))
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 200);
@@ -185,7 +258,7 @@ export function buildCloudPayload(item: InspectionItem, pack: RulePack, input: C
           trusted: input.draftTrusted,
         }
       : null,
-    note: input.draft ? redactForCloud(input.draft.note) : "",
+    note: input.draft ? redactForCloud(input.draft.note, item) : "",
     photo: "kept on the device",
   };
   const json = JSON.stringify(summary);

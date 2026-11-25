@@ -20,10 +20,12 @@
       <div>
         <h1>Forty observations, two recorded paths</h1>
         <p class="lede">
-          The same forty notes and photos go through the on-device path and the shipped hybrid. A cloud only baseline was
-          run once, on six items on 2026-11-23, and is kept apart below: the product never sends a photo to a model, so
-          the baseline is the comparison and not the product. A run needs the Firebase config in the URL fragment; the
-          recorded run below needs nothing and is what the README quotes.
+          The same forty notes and photos go through the on-device path and the shipped hybrid. In both of those product
+          paths no photo byte reaches a model or a server: the photo stays on the device and only a typed summary goes
+          out. A cloud only baseline was run once, on six items on 2026-11-23, and is kept apart below. It is the one
+          experiment in this repository that sent photos (535,758 bytes), it exists to compare the product with a naive
+          design, and it is not part of the product. A run needs the Firebase config in the URL fragment; the recorded
+          run below needs nothing and is what the README quotes.
         </p>
         <p class="lede">
           Two more sets sit beside the forty. <a href="?set=heldout">The ten held out notes</a> ask for the same
@@ -46,7 +48,7 @@
         </div>
         <p class="status" id="status" role="status" aria-live="polite">Checking this browser.</p>
         <p class="small" id="model-note">
-          The recorded run used gemini-4-hydrogen on 2026-11-25. The two runs before it used the fallback model
+          The recorded run used gemini-4-hydrogen on 2026-11-25 (KST). The two runs before it used the fallback model
           gemini-3.5-flash-lite, because the gemini-4-hydrogen free daily quota had been spent earlier that day.
         </p>
         <div class="probe" id="probe"></div>
@@ -65,8 +67,9 @@
         <p class="small">
           Six items went to the cloud with their photos on 2026-11-23, an hour before the D5 run: 6 of 6 agreed
           with the human key, 535,758 photo bytes and 718,749 request bytes left the browser, and no answer was refused.
-          It is not repeated here because the same free daily quota covers it. The product does not send a photo to a
-          model; this baseline is what the hybrid is measured against.
+          It is not repeated here because the same free daily quota covers it. This baseline is the only experiment in
+          the repository where photos were sent, and it is a comparison, not the product: in the product paths (device
+          and hybrid) the photo stays on the device and the request carries typed text only.
         </p>
       </section>
     </main>
