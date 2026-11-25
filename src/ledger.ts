@@ -146,6 +146,8 @@ export interface ReportViolation {
   note: string;
   photoDataUrl: string | null;
   source: string;
+  /** Which layer structured the note, when the device did. */
+  deviceSource: string;
   reviewRequired: boolean;
 }
 
@@ -181,6 +183,7 @@ function toViolation(observation: Observation, pack: RulePack): ReportViolation 
     note: observation.finding ? observation.finding.note : observation.note,
     photoDataUrl: observation.photoDataUrl,
     source: observation.source,
+    deviceSource: observation.deviceSource,
     reviewRequired: observation.reviewRequired,
   };
 }

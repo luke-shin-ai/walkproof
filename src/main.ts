@@ -232,10 +232,14 @@ function sourceText(observation: Observation): string {
   return "Unresolved";
 }
 
-function plainSource(source: string): string {
+function plainSource(source: string, deviceSource = ""): string {
   if (source === "in_cloud") return "Cloud";
   if (source === "rejected_unsupported") return "Rejected";
-  if (source === "on_device") return "Device";
+  if (source === "on_device") {
+    if (deviceSource === "on_device") return "On-device model";
+    if (deviceSource === "local_rules") return "Rule parser";
+    return "Device";
+  }
   return "Unresolved";
 }
 
@@ -638,7 +642,7 @@ function reportSection(): string {
       (entry) => `
       <tr>
         <td><strong>${esc(entry.label)}</strong><p class="doc-detail">${esc(entry.zone)} / ${esc(plainDetail(entry.detail))}</p></td>
-        <td>${esc(plainSource(entry.source))}</td>
+        <td>${esc(plainSource(entry.source, entry.deviceSource))}</td>
         <td class="doc-date">${entry.fixBy ? esc(entry.fixBy) : `<span class="muted">after review</span>`}</td>
       </tr>`,
     )
