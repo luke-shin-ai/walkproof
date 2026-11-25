@@ -182,7 +182,11 @@ the commands that reproduce the run.
 | request bytes to the cloud | 0 | 943 | 0 | 0 | 2,904 |
 
 Both product arms recorded 0 photo bytes, and the table above is what they
-measured. The only run in this repository that sent photos is the cloud only
+measured. After this run the record labels were made explicit (`On-device model`
+and `Rule parser` instead of one device label) and the cloud line began masking
+capitalised words outside the safety vocabulary. Neither changes a decision, and
+the notes in this run carry no such word: the only capitalised words inside a
+sentence are "I" and "Friday", which the filter keeps. The only run in this repository that sent photos is the cloud only
 baseline of 2026-11-23, kept as a comparison, described above and in the
 "earlier run" section.
 
@@ -391,7 +395,7 @@ person".
 npm install
 cp .env.example .env      # Firebase web app values, or leave empty for local only
 npm run dev
-npm test                  # 114 tests
+npm test                  # 115 tests
 npm run build             # type check, then the Vite build
 npm run check:ai-tells    # fails on machine looking punctuation and on secrets
 

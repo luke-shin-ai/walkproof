@@ -70,6 +70,13 @@ describe("what leaves the device", () => {
     expect(redacted).toContain("Smoke detector");
   });
 
+  it("keeps a pronoun and a weekday, which the bench notes use", () => {
+    const item = findItem(DEFAULT_PACK, "fh-07")!;
+    const redacted = redactForCloud("Reel is missing from the hose point, bracket empty since Friday, I think.", item);
+    expect(redacted).not.toContain("[name]");
+    expect(redacted).toContain("Friday");
+  });
+
   it("leaves the first word of a sentence alone, which is a stated limit", () => {
     const item = findItem(DEFAULT_PACK, "fe-01")!;
     const redacted = redactForCloud("Kim's storeroom key is missing.", item);
