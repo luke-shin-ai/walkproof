@@ -12,8 +12,9 @@ it into pass, fail or review.
 Built for the Firebase AI Logic hybrid hackathon, Web/Chrome category, which
 asks for Gemini Nano 4 through Firebase AI Logic. A build made with Firebase
 values calls `firebase/ai` with `ONLY_ON_DEVICE` for the note and
-`ONLY_IN_CLOUD` for the cloud answer, with App Check started through reCAPTCHA
-Enterprise. The published page carries no Firebase project on purpose, so the
+`ONLY_IN_CLOUD` for the cloud answer, with App Check started on the reCAPTCHA
+Enterprise site key for the domain, or on a debug token when only that is
+available. The published page carries no Firebase project on purpose, so the
 same device job runs there through the browser's own `LanguageModel` API and no
 answer leaves the browser. The section "Firebase AI Logic at runtime and App
 Check" says where each call sits in the code and how to run that build.
@@ -226,9 +227,10 @@ answer would over-claim: both answers were accepted as findings, and the pack
 still recorded review on both, as the key says, so neither was settled.
 
 Across the session the cloud made 13 calls and the gate refused 4 answers. The
-typed summaries came to 6,282 bytes and no photo byte left the browser in either
-product path. This session did not run the cloud only baseline, so it sent no
-photo at all.
+typed summaries came to 6,282 bytes across those 13 calls, which is 943 bytes in
+the first pass, 2,435 in the second and 2,904 in the open cloud path set, and no
+photo byte left the browser in either product path. This session did not run the
+cloud only baseline, so it sent no photo at all.
 
 ## Reproduce a measured run
 
