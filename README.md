@@ -65,6 +65,12 @@ published build therefore takes a web config only at runtime, from the URL
 fragment, and runs the device job on the browser's own model. What a reviewer
 reads in the code is what a configured build runs.
 
+In a build with a project, every model call goes through `firebase/ai`. The
+browser's own `LanguageModel` is reached only in a build that has no project, as
+a way to show the device job without a key, and it is the same on-device model
+that `firebase/ai` drives. Without either, the app uses the deterministic rule
+parser and makes no model call.
+
 To run this page with AI Logic and App Check:
 
 ```bash
