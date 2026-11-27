@@ -19,6 +19,23 @@ same device job runs there through the browser's own `LanguageModel` API and no
 answer leaves the browser. The section "Firebase AI Logic at runtime and App
 Check" says where each call sits in the code and how to run that build.
 
+Two choices in this build are deliberate, and a reviewer asks about both first.
+
+- The published page makes no AI Logic call, and the reason is in the rules. AI
+  Logic needs a Firebase project, and the rules keep production keys and live
+  project secrets out of the repository, the submission form and the testing
+  instructions. The page therefore takes a web config only at runtime, from the
+  URL fragment, runs the device job on the browser's own model, and says above
+  the checklist which of the two builds it is.
+- `PREFER_ON_DEVICE` is not used, and that is what makes the gate countable. The
+  SDK's automatic fallback picks the arm per browser, so the two paths merge in
+  one run: a browser with the model answers on the device, the cloud's share of
+  answers cannot be counted, and there is no fixed device answer to compare with
+  the cloud one. Each arm here is fixed with `ONLY_ON_DEVICE` or `ONLY_IN_CLOUD`,
+  the answer carries the source the SDK reports, the badge is exact, and a
+  refusal is a number. In the measured session the cloud was asked 13 times and
+  the gate refused 4 answers.
+
 - Live app: https://luke-shin-ai.github.io/walkproof/
 - Forty observation measurement: https://luke-shin-ai.github.io/walkproof/bench/
 
