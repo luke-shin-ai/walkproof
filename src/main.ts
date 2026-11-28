@@ -499,6 +499,7 @@ function summaryCard(): string {
   const stats = summary();
   const percent = stats.total ? Math.round((stats.checked / stats.total) * 100) : 0;
   const calls = budget();
+  const cloudBytes = state.observations.reduce((sum, entry) => sum + (entry.cloud?.payloadBytes ?? 0), 0);
   return `
     <div class="card summary">
       <div class="summary-head">
@@ -514,11 +515,15 @@ function summaryCard(): string {
       </dl>
       <p class="recorded-run" title="Summed from the three hybrid arms of the 2026-11-25 session in public/bench/results-latest.json.">
         <strong>${esc(RECORDED_LINE)}</strong>
-        <span>The four counters below count this copy's own walkthrough. They stay at 0 here because this build carries no Firebase project.</span>
+        <span>${
+          state.firebaseReady
+            ? "The four counters below count this copy's own walkthrough."
+            : "The four counters below count this copy's own walkthrough. They stay at 0 here because this build carries no Firebase project."
+        }</span>
       </p>
       <ul class="facts">
         <li><span>Photos on this device</span><strong>${stats.photosOnDevice}</strong></li>
-        <li><span>Bytes sent to the cloud</span><strong>0</strong></li>
+        <li><span>Bytes sent to the cloud</span><strong>${cloudBytes.toLocaleString("en-US")}</strong></li>
         <li><span>Cloud calls today</span><strong>${calls.spent} of ${calls.limit}</strong></li>
         <li><span>Median record time</span><strong>${stats.medianLatencyMs ? `${stats.medianLatencyMs} ms` : "n/a"}</strong></li>
       </ul>
@@ -732,7 +737,7 @@ function render(): void {
       <div class="badges">${badgeRow()}</div>
     </header>
 
-    <div class="reviewer-wrap">
+    <div class="reviewer-wrap"${state.firebaseReady ? ' hidden' : ""}>
       <div class="reviewer">
         <p class="reviewer-record">
           <strong>Recorded run, ${RECORDED_RUN.date}:</strong> a build of this code with Firebase values made ${RECORDED_RUN.calls} cloud calls to ${esc(RECORDED_RUN.model)} through <code>firebase/ai</code>, the gate refused ${RECORDED_RUN.refused} answers, ${RECORDED_RUN.summaryBytes.toLocaleString("en-US")} bytes of typed summary left the browser and ${RECORDED_RUN.photoBytes} photo bytes did. This copy carries no Firebase project, so the counters under the checklist stay at 0.

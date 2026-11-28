@@ -42,6 +42,7 @@ Two choices in this build are deliberate, and a reviewer asks about both first.
 
 - Live app: https://luke-shin-ai.github.io/walkproof/
 - Forty observation measurement: https://luke-shin-ai.github.io/walkproof/bench/
+- Demo video, 2:40: https://youtu.be/HDus7VWtVME
 
 ## What each judged criterion can be checked against
 
@@ -131,6 +132,21 @@ Checked on 2026-11-25 with a local build from these values: the header read
 and 0 photo bytes, and every record named the layer that structured it. The
 on-device model was not available in that headless session, so the same run also
 shows the fallback the records use when it is absent.
+
+Checked again on 2026-11-28 with the same values, and this time the counters
+were photographed while they stood at the call they describe: the summary card
+read `Bytes sent to the cloud 472` and `Cloud calls today 1 of 20`, the header
+read `app check: on` and `cloud: gemini-4-hydrogen`, and item 07 carried the
+record `Cloud` with `Cloud call gemini-4-hydrogen: 472 B of typed summary, no
+photo. The AI Logic SDK reported inference source in_cloud` after that answer
+passed the seven checks. Four runs in a row answered the same way. The demo
+video's live app screen and one item card are those two screenshots, taken from
+the running build, not redrawn. `scripts/capture-configured-still.py` repeats
+that capture at 2x.
+
+A build with a project hides the note that the published page shows above the
+checklist, since none of it applies there, and the byte counter in that build is
+the sum of the payload bytes its own cloud calls sent.
 
 The on-device model needs a Chrome build and hardware that carry Gemini Nano.
 Where it is missing, the record says `Rule parser` and the page still records
