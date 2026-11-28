@@ -16,7 +16,7 @@ import { DEMO_STEPS, loadDemoPhoto } from "./demo";
 import { ledgerCsv, reportModel, summarize, type WalkSummary } from "./ledger";
 import { preparePhoto } from "./photo";
 import { processItem, type PipelineDeps, type Stage } from "./pipeline";
-import { RECORDED_LINE, RECORDED_NUMBERS, RECORDED_RUN } from "./recorded";
+import { RECORDED_LINE, RECORDED_RUN } from "./recorded";
 import { verifyCloudAnswer } from "./rules/verify";
 import { DEFAULT_PACK, clauseText, findItem, type PackOrigin, type RulePack } from "./rules/pack";
 import { clearWalk, deleteCapture, loadObservations, putCapture, saveObservation, type QueuedCapture } from "./storage/queue";
@@ -522,7 +522,6 @@ function summaryCard(): string {
         <li><span>Cloud calls today</span><strong>${calls.spent} of ${calls.limit}</strong></li>
         <li><span>Median record time</span><strong>${stats.medianLatencyMs ? `${stats.medianLatencyMs} ms` : "n/a"}</strong></li>
       </ul>
-      <p class="small">Recorded run in one line: ${esc(RECORDED_NUMBERS)}.</p>
       <p class="small">${esc(state.packDetail)}</p>
     </div>`;
 }
