@@ -62,7 +62,6 @@ import{$ as e,A as t,C as n,D as r,E as i,F as a,G as o,H as s,I as c,J as l,K a
         <li><span>Cloud calls today</span><strong>${n.spent} of ${n.limit}</strong></li>
         <li><span>Median record time</span><strong>${e.medianLatencyMs?`${e.medianLatencyMs} ms`:`n/a`}</strong></li>
       </ul>
-      <p class="small">Recorded run in one line: ${q(Gn)}.</p>
       <p class="small">${q(K.packDetail)}</p>
     </div>`}function Er(){let e=X(),t=K.observations.filter(e=>pr(e)).length;return`
     <div class="card actions">
