@@ -39,7 +39,7 @@ import{$ as e,A as t,C as n,D as r,E as i,F as a,G as o,H as s,I as c,J as l,K a
         ${t.photoDataUrl?`<img class="thumb" src="${t.photoDataUrl}" alt="Photo recorded for ${q(e.label)}" />`:``}
         <ul class="details">${r.map(e=>`<li>${q(e)}</li>`).join(``)}</ul>
       </div>
-    </div>`}function Tr(){let e=X(),t=e.total?Math.round(e.checked/e.total*100):0,n=mr();return`
+    </div>`}function Tr(){let e=X(),t=e.total?Math.round(e.checked/e.total*100):0,n=mr(),r=K.observations.reduce((e,t)=>e+(t.cloud?.payloadBytes??0),0);return`
     <div class="card summary">
       <div class="summary-head">
         <div><strong>${e.checked}</strong> of ${e.total} checked</div>
@@ -54,11 +54,11 @@ import{$ as e,A as t,C as n,D as r,E as i,F as a,G as o,H as s,I as c,J as l,K a
       </dl>
       <p class="recorded-run" title="Summed from the three hybrid arms of the 2026-11-25 session in public/bench/results-latest.json.">
         <strong>${q(Kn)}</strong>
-        <span>The four counters below count this copy's own walkthrough. They stay at 0 here because this build carries no Firebase project.</span>
+        <span>${K.firebaseReady?`The four counters below count this copy's own walkthrough.`:`The four counters below count this copy's own walkthrough. They stay at 0 here because this build carries no Firebase project.`}</span>
       </p>
       <ul class="facts">
         <li><span>Photos on this device</span><strong>${e.photosOnDevice}</strong></li>
-        <li><span>Bytes sent to the cloud</span><strong>0</strong></li>
+        <li><span>Bytes sent to the cloud</span><strong>${r.toLocaleString(`en-US`)}</strong></li>
         <li><span>Cloud calls today</span><strong>${n.spent} of ${n.limit}</strong></li>
         <li><span>Median record time</span><strong>${e.medianLatencyMs?`${e.medianLatencyMs} ms`:`n/a`}</strong></li>
       </ul>
@@ -177,7 +177,7 @@ import{$ as e,A as t,C as n,D as r,E as i,F as a,G as o,H as s,I as c,J as l,K a
       <div class="badges">${xr()}</div>
     </header>
 
-    <div class="reviewer-wrap">
+    <div class="reviewer-wrap"${K.firebaseReady?` hidden`:``}>
       <div class="reviewer">
         <p class="reviewer-record">
           <strong>Recorded run, ${z.date}:</strong> a build of this code with Firebase values made ${z.calls} cloud calls to ${q(z.model)} through <code>firebase/ai</code>, the gate refused ${z.refused} answers, ${z.summaryBytes.toLocaleString(`en-US`)} bytes of typed summary left the browser and ${z.photoBytes} photo bytes did. This copy carries no Firebase project, so the counters under the checklist stay at 0.
