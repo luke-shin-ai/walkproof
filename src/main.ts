@@ -16,6 +16,7 @@ import { DEMO_STEPS, loadDemoPhoto } from "./demo";
 import { ledgerCsv, reportModel, summarize, type WalkSummary } from "./ledger";
 import { preparePhoto } from "./photo";
 import { processItem, type PipelineDeps, type Stage } from "./pipeline";
+import { RECORDED_LINE, RECORDED_NUMBERS, RECORDED_RUN } from "./recorded";
 import { verifyCloudAnswer } from "./rules/verify";
 import { DEFAULT_PACK, clauseText, findItem, type PackOrigin, type RulePack } from "./rules/pack";
 import { clearWalk, deleteCapture, loadObservations, putCapture, saveObservation, type QueuedCapture } from "./storage/queue";
@@ -381,6 +382,7 @@ function badgeRow(): string {
     `<span class="badge" title="${esc(state.deviceDetail || "The on-device model structures the note when the device has it.")}">${esc(deviceLabel)}</span>`,
     `<span class="badge">${esc(cloud)}</span>`,
     state.firebaseReady ? appCheckBadge() : "",
+    `<span class="badge recorded" title="The session of ${RECORDED_RUN.date} run by this code with Firebase values. The summary card counts this copy's own walkthrough.">recorded run ${RECORDED_RUN.calls} calls / ${RECORDED_RUN.refused} refused</span>`,
     `<span class="badge">${net}</span>`,
   ].join("");
 }
@@ -510,12 +512,17 @@ function summaryCard(): string {
         <div class="count unknown"><dt>Review</dt><dd>${stats.unknown}</dd></div>
         <div class="count"><dt>Rejected</dt><dd>${stats.rejected}</dd></div>
       </dl>
+      <p class="recorded-run" title="Summed from the three hybrid arms of the 2026-11-25 session in public/bench/results-latest.json.">
+        <strong>${esc(RECORDED_LINE)}</strong>
+        <span>The four counters below count this copy's own walkthrough. They stay at 0 here because this build carries no Firebase project.</span>
+      </p>
       <ul class="facts">
         <li><span>Photos on this device</span><strong>${stats.photosOnDevice}</strong></li>
         <li><span>Bytes sent to the cloud</span><strong>0</strong></li>
         <li><span>Cloud calls today</span><strong>${calls.spent} of ${calls.limit}</strong></li>
         <li><span>Median record time</span><strong>${stats.medianLatencyMs ? `${stats.medianLatencyMs} ms` : "n/a"}</strong></li>
       </ul>
+      <p class="small">Recorded run in one line: ${esc(RECORDED_NUMBERS)}.</p>
       <p class="small">${esc(state.packDetail)}</p>
     </div>`;
 }
@@ -727,10 +734,15 @@ function render(): void {
     </header>
 
     <div class="reviewer-wrap">
-      <p class="reviewer">
+      <div class="reviewer">
+        <p class="reviewer-record">
+          <strong>Recorded run, ${RECORDED_RUN.date}:</strong> a build of this code with Firebase values made ${RECORDED_RUN.calls} cloud calls to ${esc(RECORDED_RUN.model)} through <code>firebase/ai</code>, the gate refused ${RECORDED_RUN.refused} answers, ${RECORDED_RUN.summaryBytes.toLocaleString("en-US")} bytes of typed summary left the browser and ${RECORDED_RUN.photoBytes} photo bytes did. This copy carries no Firebase project, so the counters under the checklist stay at 0.
+        </p>
+        <p>
         <span class="reviewer-label">Reviewing without #config</span>
         This published build carries no Firebase project, because the rules keep production keys out of the repository, the submission form and the testing instructions, so notes here are structured by this browser's own Gemini Nano or by the rule parser. A build made with Firebase values calls <code>firebase/ai</code> with <code>ONLY_ON_DEVICE</code> for the note and <code>ONLY_IN_CLOUD</code> for the cloud answer, and starts App Check on the reCAPTCHA Enterprise site key for the domain, or on a debug token when only that is available; the configured build run on 2026-11-25 read <code>app check: on</code>, and its cloud record came back as <code>gemini-4-hydrogen</code> with <code>inference source in_cloud</code>, 472 bytes of typed summary and 0 photo bytes. The README section <a href="https://github.com/luke-shin-ai/walkproof#firebase-ai-logic-at-runtime-and-app-check">Firebase AI Logic at runtime and App Check</a> and <code>scripts/read-configured-build.py</code> reproduce it.
-      </p>
+        </p>
+      </div>
     </div>
 
     <div class="shell">

@@ -178,6 +178,12 @@ check(
   "bench page model note names the measured model and date",
   benchHtml.includes("gemini-4-hydrogen on 2026-11-25"),
 );
+const recordedLine = `${calls} cloud calls / ${refusals} refused / ${num(bytes)} summary bytes / 0 photo bytes`;
+check(
+  "bench first screen carries the recorded run line",
+  benchHtml.includes("Recorded run, 2026-11-25 (KST)") && benchHtml.includes(recordedLine),
+  recordedLine,
+);
 
 if (!offline) {
   try {
@@ -190,6 +196,7 @@ if (!offline) {
     const page = await (await fetch(LIVE_BENCH, { cache: "no-store" })).text();
     check("live bench page names the measured model", page.includes("gemini-4-hydrogen"));
     check("live bench page names the run date", page.includes("2026-11-25"));
+    check("live bench page carries the recorded run line", page.includes(recordedLine), recordedLine);
   } catch (error) {
     check("live pages reachable", false, String(error));
   }

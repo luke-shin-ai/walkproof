@@ -141,6 +141,12 @@ select:focus-visible,
   border-color: #c8d2cc;
 }
 
+.badge.recorded {
+  color: var(--accent-ink);
+  border-color: #b7cbc0;
+  background: #eef5f1;
+}
+
 .badge-sub {
   color: var(--accent);
   font-weight: 600;
@@ -260,6 +266,8 @@ input[type="text"]::placeholder {
 }
 
 .reviewer {
+  display: grid;
+  gap: 8px;
   margin: 0;
   padding: 10px 12px;
   border: 1px solid var(--line-soft);
@@ -268,6 +276,23 @@ input[type="text"]::placeholder {
   font-size: 0.76rem;
   line-height: 1.5;
   color: var(--muted);
+}
+
+.reviewer p {
+  margin: 0;
+}
+
+.reviewer-record {
+  padding: 8px 10px;
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: #eef5f1;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.reviewer-record strong {
+  color: var(--accent-ink);
 }
 
 .reviewer-label {
@@ -677,6 +702,23 @@ input[type="text"]::placeholder {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.recorded-run {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: var(--cloud-bg);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.recorded-run strong {
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .facts li {

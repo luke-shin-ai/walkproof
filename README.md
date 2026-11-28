@@ -26,7 +26,11 @@ Two choices in this build are deliberate, and a reviewer asks about both first.
   project secrets out of the repository, the submission form and the testing
   instructions. The page therefore takes a web config only at runtime, from the
   URL fragment, runs the device job on the browser's own model, and says above
-  the checklist which of the two builds it is.
+  the checklist which of the two builds it is. Above the checklist it also prints
+  the recorded run, 13 cloud calls to `gemini-4-hydrogen`, 4 refused, 6,282 bytes
+  of typed summary and 0 photo bytes, next to this copy's own counters, so the
+  recorded session and the live copy are read together and not mistaken for one
+  another.
 - `PREFER_ON_DEVICE` is not used, and that is what makes the gate countable. The
   SDK's automatic fallback picks the arm per browser, so the two paths merge in
   one run: a browser with the model answers on the device, the cloud's share of
@@ -186,6 +190,12 @@ result file stamps it `2026-11-24T22:59:02Z`, which is the same moment in UTC.
 Raw result: `benchmarks/results-kaggle-2026-11-25.json`, the session's own table
 in `benchmarks/raw-d6-2026-11-25.txt`.
 
+Every cloud call in this session went to `gemini-4-hydrogen`. The D4 baseline and
+the D5 hybrid run before it used the app's one fallback,
+`gemini-3.5-flash-lite`, because the `gemini-4-hydrogen` free daily quota had
+been spent earlier that day, so a model name belongs to a run and not to the
+project.
+
 The answer key is the entrant's own reading, written down before the model ran
 (`fixtures/ground-truth.json`). It is not an independent assessor's key, which
 is why the two passes are reported side by side instead of one headline number.
@@ -218,11 +228,16 @@ baseline of 2026-11-23, kept as a comparison, described above and in the
 "earlier run" section.
 
 The second pass of the same forty notes, in the same session, agreed with the key
-on 37 of 40 on the device and 38 of 40 through the hybrid. Between its two passes
-the device arm recorded a different verdict on 7 of 40 items (S01, S06, S10, S21,
-S22, S25, S34) and the hybrid on 2 of 40 (S22, S38). One arm moving seven items
-is wider than the gap between the two arms, so a single run cannot rank the two
-paths. What the two passes do show is that the hybrid was no further from the key
+on 37 of 40 on the device and 38 of 40 through the hybrid; the two hybrid misses
+in that pass were S22 and S38, both cloud answers the gate refused, and S38's
+call hit the 30 s limit and was recorded at review. Comparing the first pass with
+the second, the device arm recorded a different verdict on 7 of 40 items (S01,
+S06, S10, S21, S22, S25, S34) and the hybrid on 2 of 40 (S22, S38). That is a
+different comparison from the first pass alone, where the device and the hybrid
+differed on 6 of 40 items (S01, S06, S22, S25, S33, S34): one count compares an
+arm with itself across passes, the other compares the two arms inside one pass. One
+arm moving seven items between passes is wider than the 6 item gap between the
+arms in one pass, so a single run cannot rank the two paths. What the two passes do show is that the hybrid was no further from the key
 than the device in the same session, 40 against 34 and then 38 against 37.
 
 The cloud was asked two times in the first pass and five times in the second, not
@@ -423,7 +438,7 @@ person".
 npm install
 cp .env.example .env      # Firebase web app values, or leave empty for local only
 npm run dev
-npm test                  # 115 tests
+npm test                  # 119 tests
 npm run build             # type check, then the Vite build
 npm run check:ai-tells    # fails on machine looking punctuation and on secrets
 

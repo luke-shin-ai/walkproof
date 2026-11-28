@@ -50,6 +50,21 @@ h1 {
   color: var(--muted);
 }
 
+.recorded-line {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  max-width: 74ch;
+  border-left: 3px solid var(--brand);
+  border-radius: 8px;
+  background: #eef5f1;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.recorded-line strong {
+  color: var(--brand);
+}
+
 main {
   padding: 20px 24px 60px;
   display: grid;
